@@ -18,6 +18,7 @@ Included:
 To deploy a lambda it must first be build:
 ```
 cd lambda-scrape-single-page
+go build
 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-w -s" -o bin/crunchbase-test-return-ip .
 ```
 (note: the env vars included with the go build command are needed to ensure the executable is compiled for linux amd 64 bit and are only needed
