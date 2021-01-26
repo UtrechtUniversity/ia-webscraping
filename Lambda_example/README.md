@@ -18,6 +18,7 @@ Before deploying this Lambda example, the following required resources need to b
 - configure aws cli credentials (see [link](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html))
     create a profile and remember the name of this profile (if no name was specified, the name of the profile is 'default')
 - install python3 
+- install pip3
 - install [terraform](https://www.terraform.io/downloads.html)
 - create a personal S3 bucket in AWS (region: eu-central-1)
 
