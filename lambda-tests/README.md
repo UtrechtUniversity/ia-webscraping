@@ -33,7 +33,7 @@ serverless deploy
 ### Run Tests:
 
 The scrape controller package can be run locally to scrape pages in bulk. To use it first deploy the `scrape-single-page` 
-lambda that acts as a proxy that fetches pages for you. The controller fetches urls from the Internet Archive cdx endpoint. 
+lambda that acts as a proxy that fetches pages for you. In `scrape-controler/main.go` set `lambdaUrl` to the URL that Serverless returned. The controller fetches urls from the Internet Archive cdx endpoint. 
 The pages in these cdx files are then fetched in parallel without any rate limiting.
 
 ### Results:
