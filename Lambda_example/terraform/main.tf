@@ -61,3 +61,10 @@ resource "aws_lambda_function" "test_lambda" {
   }
 
 }
+
+module "cloudwatch_trigger" {
+    source = "./cloudwatch_trigger"
+    lambda_name = aws_lambda_function.test_lambda.function_name
+    lambda_arn = aws_lambda_function.test_lambda.arn
+    trigger_rate = "3"
+}
