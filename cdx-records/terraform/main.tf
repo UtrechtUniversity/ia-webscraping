@@ -4,7 +4,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "lambda_cdx_mvos"
+  name = "lambda-cdx-crunchbase-dev-mvos"
 
   assume_role_policy = <<EOF
 {
@@ -60,4 +60,11 @@ resource "aws_lambda_function" "test_lambda" {
     }
   }
 
+}
+
+module "cloudwatch_trigger" {
+    source = "./cloudwatch_trigger"
+    lambda_name = aws_lambda_function.test_lambda.function_name
+    lambda_arn = aws_lambda_function.test_lambda.arn
+    trigger_rate = "3"
 }
