@@ -18,7 +18,7 @@ import (
 
 const (
 	lambdaURL              = "https://bk0g3z2x09.execute-api.us-east-1.amazonaws.com/dev?url=%s" // Lambda url that serves as a proxy
-	internetArchiveCDXUrl  = "http://web.archive.org/cdx/search/cdx?url=%s"                      // IA cdx endpoint that returns all pages in the Internet Archive for a specific url
+	internetArchiveCDXUrl  = "http://web.archive.org/cdx/search/cdx?url=%s&collapse=digest"      // IA cdx endpoint that returns all pages in the Internet Archive for a specific url
 	internetArchivePageUrl = "https://web.archive.org/web/%s/%s"                                 // IA endpoint used to retrieve a single archived page. Parameters for each page can be found by using the IA's cdx endpoint
 	goroutineCount         = 4                                                                   // Number of goroutines to start to fetch pages concurrently. Values above 1000 probably have no effect since since AWS caps the number of concurrent lambda calls
 
@@ -31,8 +31,8 @@ const (
 var orgs = []string{
 	"2ie-edu.org",
 	"aaaid.org",
-	//"aacb.org",
-	//"aalco.int",
+	"aacb.org",
+	"aalco.int",
 	//"aardo.org",
 	//"abn.ne",
 	//"acp.int",
@@ -83,10 +83,12 @@ func main() {
 	)
 
 	var (
-		pageCount  int64 // Number of urls fetched
-		bytesCount int64 // Number of bytes fetched
-
-		wg sync.WaitGroup // Waitgroup that is used wait until all workers are done
+		pageCount                 int64 // Number of urls fetched
+		bytesCount                int64 // Number of bytes fetched
+		urlsInCDX                 int64
+		digestFilteredCount       int64
+		duplicateUrlFilteredCount int64
+		wg                        sync.WaitGroup // Waitgroup that is used wait until all workers are done
 	)
 
 	if _, err := os.Stat(scrapeFolder); os.IsNotExist(err) {
@@ -161,8 +163,8 @@ func main() {
 			continue
 		}
 
-		var urlsDone = map[string]struct{}{} // Used to skip pages with the same digest
-
+		var digestsDone = map[string]struct{}{} // Used to skip pages with the same digest
+		var urlsDone = map[string]struct{}{}
 		// Go through each line in the cdx file
 		for i := range lines {
 			// For each line extract the timestamp, page url and digest
@@ -172,15 +174,24 @@ func main() {
 				continue // Just continue on error
 			}
 
-			if _, ok := urlsDone[digest]; ok {
+			urlsInCDX++
+
+			if _, ok := digestsDone[digest]; ok {
+				digestFilteredCount++
 				continue // Skip pages with the exact same content
+			}
+
+			if _, ok := urlsDone[url]; ok {
+				duplicateUrlFilteredCount++
+				continue
 			}
 
 			// Create the IA url for this page and add it to the jobs queue
 			urls <- fmt.Sprintf(internetArchivePageUrl, timestamp, url)
 
 			// Mark page as done
-			urlsDone[digest] = struct{}{}
+			digestsDone[digest] = struct{}{}
+			urlsDone[url] = struct{}{}
 		}
 	}
 
@@ -189,8 +200,8 @@ func main() {
 
 	// Wait until all goroutines are finished
 	wg.Wait()
-
 	log.Printf("\rDone. Fetched %d pages for %d organizations. Took %s and %d bytes. Average time per page: %s at %d bytes/s", pageCount, len(orgs), time.Since(start), bytesCount, time.Since(start)/time.Duration(pageCount), bytesCount/int64(time.Since(start).Seconds()))
+	log.Printf("URLS in CDX: %d. Filtered by digest: %d. Filtered by path: %d. Retrieved: %d.", urlsInCDX, digestFilteredCount, duplicateUrlFilteredCount, pageCount)
 }
 
 // extractFieldsFromLine returns the timestamp, url and digest of a single page from a line in a cdx file
