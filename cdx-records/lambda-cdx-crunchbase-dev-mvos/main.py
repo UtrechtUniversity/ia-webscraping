@@ -1,7 +1,7 @@
 import boto3
 import os
 import requests
-import pandas as pd
+import csv
 
 
 def handler(event, context):
@@ -12,7 +12,7 @@ def sqs_receive_messages():
     # Create SQS client
     sqs = boto3.client('sqs')
 
-    queue_url = os.environ['sqs_id']
+    queue_url = os.environ['sqs_cdx_id']
 
     # Receive message from SQS queue
     response = sqs.receive_message(
@@ -46,7 +46,8 @@ def sqs_receive_messages():
 def handle_message(message):
     urls = message['Body'].split(',')
     for url in urls:
-        get_urls(url)
+        res = get_urls(url)
+        sqs_send_message(res)
 
 def get_urls(domain):
         payload = {
@@ -83,14 +84,36 @@ def get_urls(domain):
             resume_key = "finished"
             urls = response_list[1:]
 
-        #print(f"The domain {domain} has {len(urls)} urls/snapshots")
-        
-        df_urls = pd.DataFrame(urls,index=None)
-        csv_file = f"/tmp/cdx_records_{domain}.csv"
-        df_urls.to_csv(csv_file,header=False,index=False)
+        result = f"The domain {domain} has {len(urls)} urls/snapshots"
 
-        s3_resource = boto3.resource(service_name ='s3',region_name = 'EU (Frankfurt) eu-central-1')
+        print(result)
 
-        bucket_name = "crunchbase-dev-mvos-source"
-        s3_resource.meta.client.upload_file(
-            Filename=csv_file,Bucket=bucket_name,Key=f'pilot100_v2/{csv_file}')
+        return result
+
+def sqs_send_message(content):
+    # Create SQS client
+    sqs = boto3.client('sqs')
+
+    queue_url = os.environ['sqs_fetch_id']
+
+    response = sqs.send_message(
+        QueueUrl=queue_url,
+        DelaySeconds=10,
+        MessageAttributes={
+            'Title': {
+                'DataType': 'String',
+                'StringValue': 'The Whistler'
+            },
+            'Author': {
+                'DataType': 'String',
+                'StringValue': 'John Grisham'
+            },
+            'WeeksOn': {
+                'DataType': 'Number',
+                'StringValue': '6'
+            }
+        },
+        MessageBody=(
+            f'My message:{content}')
+    )
+    print(response['MessageId'])

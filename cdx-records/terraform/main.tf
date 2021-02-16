@@ -28,8 +28,16 @@ data "aws_s3_bucket_object" "lambda_code" {
   key    = "cdx-records/lambda-cdx-crunchbase-dev-mvos.zip"
 }
 
-resource "aws_sqs_queue" "sqs_example_queue" {
+resource "aws_sqs_queue" "sqs_cdx_queue" {
   name                      = "crunchbase-dev-mvos-lambda-cdx-queue"
+  delay_seconds             = 10
+  max_message_size          = 2048
+  message_retention_seconds = 86400
+  receive_wait_time_seconds = 10
+}
+
+resource "aws_sqs_queue" "sqs_fetch_queue" {
+  name                      = "crunchbase-dev-mvos-lambda-fetch-queue"
   delay_seconds             = 10
   max_message_size          = 2048
   message_retention_seconds = 86400
@@ -55,8 +63,10 @@ resource "aws_lambda_function" "test_lambda" {
 
   environment {
     variables = {
-      sqs_id = aws_sqs_queue.sqs_example_queue.id,
-      sqs_arn = aws_sqs_queue.sqs_example_queue.arn
+      sqs_cdx_id = aws_sqs_queue.sqs_cdx_queue.id,
+      sqs_cdx_arn = aws_sqs_queue.sqs_cdx_queue.arn,
+      sqs_fetch_id = aws_sqs_queue.sqs_fetch_queue.id,
+      sqs_fetch_arn = aws_sqs_queue.sqs_fetch_queue.arn
     }
   }
 
