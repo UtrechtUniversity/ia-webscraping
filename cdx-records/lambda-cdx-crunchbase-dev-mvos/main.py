@@ -1,6 +1,8 @@
 import boto3
 import os
 import requests
+import pandas as pd
+
 
 def handler(event, context):
     print("Started lambda-sqs example.")
@@ -70,7 +72,7 @@ def get_urls(domain):
 
         # Extraction
         if not response_list:
-            print(f"Nope: {self.domain}")
+            print(f"No records available: {domain}")
             return
 
         header = response_list[0]
@@ -81,5 +83,14 @@ def get_urls(domain):
             resume_key = "finished"
             urls = response_list[1:]
 
-        print(f"The domain {domain} has {len(urls)} urls/snapshots")
+        #print(f"The domain {domain} has {len(urls)} urls/snapshots")
+        
+        df_urls = pd.DataFrame(urls,index=None)
+        csv_file = f"/tmp/cdx_records_{domain}.csv"
+        df_urls.to_csv(csv_file,header=False,index=False)
 
+        s3_resource = boto3.resource(service_name ='s3',region_name = 'EU (Frankfurt) eu-central-1')
+
+        bucket_name = "crunchbase-dev-mvos-source"
+        s3_resource.meta.client.upload_file(
+            Filename=csv_file,Bucket=bucket_name,Key=f'pilot100_v2/{csv_file}')
