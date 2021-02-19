@@ -100,20 +100,16 @@ def sqs_send_message(content):
         QueueUrl=queue_url,
         DelaySeconds=10,
         MessageAttributes={
-            'Title': {
-                'DataType': 'String',
-                'StringValue': 'The Whistler'
+                'Title': {
+                    'DataType': 'String',
+                    'StringValue': f'Message nr '
+                },
+                'Author': {
+                    'DataType': 'String',
+                    'StringValue': 'mvos'
+                },
             },
-            'Author': {
-                'DataType': 'String',
-                'StringValue': 'John Grisham'
-            },
-            'WeeksOn': {
-                'DataType': 'Number',
-                'StringValue': '6'
-            }
-        },
         MessageBody=(
             f'My message:{content}')
-    )
+    ) 
     print(response['MessageId'])

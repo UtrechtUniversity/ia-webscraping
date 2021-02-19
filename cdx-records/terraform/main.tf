@@ -23,6 +23,32 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
+resource "aws_iam_role_policy_attachment" "sqs_send" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.sqs_send_policy.arn
+}
+
+resource "aws_iam_policy" "sqs_send_policy" {
+  name        = "sqs_send_policy"
+  path        = "/"
+  description = "SQS send policy example"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sqs:SendMessage",
+        ]
+        Effect   = "Allow"
+        Resource = aws_sqs_queue.sqs_fetch_queue.arn
+      },
+    ]
+  })
+}
+
 data "aws_s3_bucket_object" "lambda_code" {
   bucket = "crunchbase-dev-mvos-source"
   key    = "cdx-records/lambda-cdx-crunchbase-dev-mvos.zip"
