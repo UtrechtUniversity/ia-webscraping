@@ -2,6 +2,8 @@ import boto3
 import os
 import requests
 import csv
+from urllib.parse import urlparse
+from urllib.error import URLError
 
 
 def handler(event, context):
@@ -46,14 +48,25 @@ def sqs_receive_messages():
 def handle_message(message):
     urls = message['Body'].split(',')
     for url in urls:
-        res = get_urls(url)
-        sqs_send_message(res)
+        domain = get_domain(url)
+        records = get_urls(domain)
+        if records:
+            sqs_send_urls(domain,records)
+
+def get_domain(url):
+    try:
+        domain = urlparse(url).netloc
+        domain = domain.replace("www.", "")
+        return domain
+    except URLError as e: 
+        print(f"Not a valid url:{e}")
+        pass        
 
 def get_urls(domain):
         payload = {
             'url': domain,
             'matchType': 'prefix',
-            'fl': 'urlkey,timestamp,statuscode',
+            'fl': 'urlkey,timestamp',
             'collapse': 'timestamp:4',
             'from': '2018',
             'to': '2019',
@@ -74,7 +87,7 @@ def get_urls(domain):
         # Extraction
         if not response_list:
             print(f"No records available: {domain}")
-            return
+            return None
 
         header = response_list[0]
         if not response_list[-2]:
@@ -84,11 +97,11 @@ def get_urls(domain):
             resume_key = "finished"
             urls = response_list[1:]
 
-        result = f"The domain {domain} has {len(urls)} urls/snapshots"
+        # result = f"The domain {domain} has {len(urls)} urls/snapshots"
 
-        print(result)
+        # print(result)
 
-        return result
+        return urls
 
 def sqs_send_message(content):
     # Create SQS client
@@ -112,4 +125,64 @@ def sqs_send_message(content):
         MessageBody=(
             f'My message:{content}')
     ) 
-    print(response['MessageId'])
+    return response
+
+def restore_domain(domain,url):
+    """Restore original domain name in CDX url"""
+    domain_split = domain.split('.')
+    domain_split.reverse()
+    domain_key = ",".join(domain_split) + ')'
+    
+    new = url.replace(domain_key,domain)
+    
+    return new
+
+def chunk_join(lst,n):
+    """Yield successive n-sized chunks from lst;
+       join elements in single string per chunk"""
+    for i in range(0, len(lst), n):
+        try:
+            elements = lst[i:i + n]
+            yield ','.join(elements)
+        except:
+            pass
+
+def sqs_send_urls(domain,records):
+    """Format cdx response and send in batches to sqs"""
+
+    # Restore original domain in CDX url
+    rec_list = [[restore_domain(domain,url),timestamp] for url,timestamp in records]    
+
+    # Divide list into batches of 5 records; send batch to sqs
+
+    for rec in chunk_join(rec_list,5):
+        response = sqs_send_message(rec)
+        print(response['MessageId'])
+
+
+def main():
+    """Test script to run from command line"""
+
+    message = (
+            "https://moonvision.io/,"
+            "http://www.enpulsion.com/,"
+            "https://kiweno.com,"
+            "https://rateboard.io,"
+            "https://www.meetfox.com,"
+            "https://etudo.co/?lang=en,"
+            "http://www.finnest.at,"
+            "http://www.journiapp.com,"
+            "https://www.prime-crowd.com/,"
+            "https://www.intellyo.com"
+    )
+        
+    urls = message.split(',')
+    for url in urls:
+        domain = get_domain(url)
+        records = get_urls(domain)
+        if records:
+            print(f"Succes for {domain}")
+            sqs_send_urls(domain,records)
+
+if __name__ == "__main__":
+    main()
