@@ -66,7 +66,7 @@ def get_urls(domain):
         payload = {
             'url': domain,
             'matchType': 'prefix',
-            'fl': 'urlkey,timestamp',
+            'fl': 'urlkey,timestamp,digest',
             'collapse': 'timestamp:4',
             'from': '2018',
             'to': '2019',
@@ -142,13 +142,17 @@ def sqs_send_urls(domain,records):
     """Format cdx response and send in batches to sqs"""
 
     # Restore original domain in CDX url
-    rec_list = [[restore_domain(domain,url),timestamp] for url,timestamp in records]    
+    rec_list = [[restore_domain(domain,url),time,dgst] for url,time,dgst in records]   
+    
+    # Filter out urls with non-text extension
+    blacklist = ['.css','.js','.map','.xml','.png','.woff','.gif','.jpg',
+                '.JPG','.jpeg','.bmp','.mp4','.svg','woff2','.ico','.ttf']
+    rec_filtered = [[url,time,dgst] for url,time,dgst in rec_list if not url.endswith(tuple(blacklist))] 
 
     # Divide list into batches of 5 records; send batch to sqs
-    for rec in chunks(rec_list,5):
+    for rec in chunks(rec_filtered,5):
         response = sqs_send_message(rec)
         print(f"Sent message {response['MessageId']} to fetch queue")
-
 
 def main():
     """Test script to run from command line"""
@@ -172,7 +176,7 @@ def main():
         records = get_urls(domain)
         if records:
             print(f"Records found for {domain}; sending to sqs")
-            #sqs_send_urls(domain,records)
+            sqs_send_urls(domain,records)
 
 if __name__ == "__main__":
     main()
