@@ -43,7 +43,7 @@ def sqs_receive_messages():
         )
     else:
         message = 'None'
-    print('Received and Deleted message: %s' % message)
+    print(f'Received and Deleted message: {message}')
 
 def handle_message(message):
     urls = message['Body'].split(',')
@@ -97,10 +97,6 @@ def get_urls(domain):
             resume_key = "finished"
             urls = response_list[1:]
 
-        # result = f"The domain {domain} has {len(urls)} urls/snapshots"
-
-        # print(result)
-
         return urls
 
 def sqs_send_message(content):
@@ -137,15 +133,10 @@ def restore_domain(domain,url):
     
     return new
 
-def chunk_join(lst,n):
-    """Yield successive n-sized chunks from lst;
-       join elements in single string per chunk"""
-    for i in range(0, len(lst), n):
-        try:
-            elements = lst[i:i + n]
-            yield ','.join(elements)
-        except:
-            pass
+def chunks(L, n):
+    """ Yield successive n-sized chunks from L """
+    for i in range(0, len(L), n):
+        yield L[i:i+n]
 
 def sqs_send_urls(domain,records):
     """Format cdx response and send in batches to sqs"""
@@ -154,10 +145,9 @@ def sqs_send_urls(domain,records):
     rec_list = [[restore_domain(domain,url),timestamp] for url,timestamp in records]    
 
     # Divide list into batches of 5 records; send batch to sqs
-
-    for rec in chunk_join(rec_list,5):
+    for rec in chunks(rec_list,5):
         response = sqs_send_message(rec)
-        print(response['MessageId'])
+        print(f"Sent message {response['MessageId']} to fetch queue")
 
 
 def main():
@@ -181,8 +171,8 @@ def main():
         domain = get_domain(url)
         records = get_urls(domain)
         if records:
-            print(f"Succes for {domain}")
-            sqs_send_urls(domain,records)
+            print(f"Records found for {domain}; sending to sqs")
+            #sqs_send_urls(domain,records)
 
 if __name__ == "__main__":
     main()

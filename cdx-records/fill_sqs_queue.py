@@ -46,7 +46,7 @@ def main():
     # Send corresponding messages to SQS queue
     for i,comp in enumerate(chunk_join(companies,5)):
         res = send_custom_message(queue_url,comp,i)
-        print(res['MessageId'])
+        print(f"Message ID: {res['MessageId']}")
 
 if __name__ == "__main__":
     main()
