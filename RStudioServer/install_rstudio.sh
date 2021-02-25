@@ -33,8 +33,8 @@ echo "*** /Install R studio ***"
 
 # Install Rpackages
 echo "*** Install R packages ***"
-sudo yum install -y libgit2 curl openssl libcurl-devel openssl-devel libssh2-devel build-essential libcurl4-gnutls-dev libxml2-devel
+sudo yum install -y libgit2 curl openssl libcurl-devel openssl-devel libssh2-devel build-essential libcurl4-gnutls-dev libxml2-devel gsl-devel
 sudo R --no-save << R_SCRIPT
-install.packages(c("devtools", 'ggplot2', 'itertools', 'tm', 'wordcloud','aws.s3','aws.ec2metadata'), "/usr/share/R/library/", repos="http://cran.rstudio.com/")
+install.packages(c("devtools", 'ggplot2', 'itertools', 'tm', 'wordcloud', 'doParallel', 'psych', 'reshape', 'topicmodels','aws.s3','aws.ec2metadata'), "/usr/share/R/library/", repos="http://cran.rstudio.com/")
 R_SCRIPT
 echo "*** /Install R packages ***"

@@ -110,7 +110,7 @@ library(aws.ec2metadata) # Load EC2 metadata library to use credentials from EC2
 
 # Load data from S3 (bucket='crunchbase-dev-rjbood', key='Crunchbase_test_sample.csv')
 path <- 's3://crunchbase-dev-rjbood/Crunchbase_test_sample.csv'
-data <- aws.s3::s3read_using(read.csv, object = path)
+data <- aws.s3::s3read_using(read.csv, object = path, stringAsFactors = False, fileEncoding="latin1")
 
 # Write data back to S3 (bucket='crunchbase-dev-rjbood', key='Crunchbase_write_sample.csv')
 aws.s3::s3write_using(data, write.csv, object = 's3://crunchbase-dev-rjbood/Crunchbase_write_sample.csv')
