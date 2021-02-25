@@ -8,6 +8,11 @@ variable "deployment_owner" {
   description = "resources of this deployment will receive the owner tag"
 }
 
+variable "s3_buckets" {
+  type = list
+  description = "List of s3 buckets that the rstudio server needs to access; list should contain the arn(s) of the buckets" 
+}
+
 variable "ip_whitelist" {
   type = list
   description = "the ip address that should be whitelisted"

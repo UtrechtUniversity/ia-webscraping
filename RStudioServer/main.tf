@@ -37,9 +37,31 @@ resource "aws_instance" "rstudio-server" {
 
 #----------- IAM instance profile --------
 
-resource "aws_iam_role_policy_attachment" "ec2-policy" {
+resource "aws_iam_policy" "ec2_policy" {
+  name        = "ec2_rstudio_s3_policy_${var.deployment_name}"
+  path        = "/"
+  description = "Policy for ec2 rstudio server for s3 access"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "s3:*",
+        ]
+        Effect   = "Allow"
+        Resource = var.s3_buckets
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_policy" {
   role       = aws_iam_role.role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  policy_arn = aws_iam_policy.ec2_policy.arn
+  #policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {

@@ -37,15 +37,17 @@ Before deploying this RStudioServer, the following required resources need to be
 
 Create your own copy of the 'RStudioServer' directory on your local client.
 
-### create a terraform.tfstate file
+### Change build.sh parameters
 
-The deployment of this EC2/Rstudio requires a number of input variables. These can be provided to Terraform by creating a 'terraform.tfstate' file that contains the following input variables:
-- deployment_name > The name of your deployment; all resources will be tagged with this name
-- deployment_owner > Your email address; this will indicate that the AWS resources are owned by you
-- ip_whitelist > The IP address or list of addresses that should be granted access to Rstudio. The value should be a list of CIDR ranges, a CIDR range is the ip address of your laptop followed by '/32'. Example '["5.132.30.83/32"]'
-- instance_type > the [instance type](https://aws.amazon.com/ec2/instance-types/) of your server; this describe how much CPU cores/memory the server gets. IMPORTANT, a larger instance type (i.e. more cpu and/or memory) is also more expensive
-- rstudio_user > the username which will be used to login in RStudio
-- rstudio_user_pwd > the PWD of the R studio user
+Change the following lines in the 'terraform.tfstate' script
+- line 2: deployment_name > The name of your deployment; all resources will be tagged with this name
+- line 3: deployment_owner > Your email address; this will indicate that the AWS resources are owned by you
+- line 4: ip_whitelist > The IP address or list of addresses that should be granted access to Rstudio. The value should be a list of CIDR ranges, a CIDR range is the ip address of your laptop followed by '/32'
+- line 5: s3_buckets > The list of S3 bucket ARN(s) that the rstudio server needs to access (ARN = amazon resource name; can be found by looking up the s3 buckets in the AWS console>s3). Note, to give access to the full s3 bucket the ARN must be followed by '/*' or optionally with an additional key to only grant access to a folder.
+(e.g. ["arn:aws:s3:::crunchbase-dev-rjbood/*"] or ["arn:aws:s3:::crunchbase-dev-rjbood/data/*"]).
+- line 7: instance_type > the [instance type](https://aws.amazon.com/ec2/instance-types/) of your server; this describe how much CPU cores/memory the server gets. IMPORTANT, a larger instance type (i.e. more cpu and/or memory) is also more expensive
+- line 10: rstudio_user > the username which will be used to login in RStudio
+- line 11: rstudio_user_pwd > the PWD of the R studio user
 
 #### provider.tf
 Terraform relies on plugins called "providers" to interact with remote systems like AWS. 
