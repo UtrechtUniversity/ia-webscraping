@@ -6,22 +6,25 @@ Terraform is used to deploy the following AWS resources:
 - SQS queue 
 - Lambda
 - CloudWatch
+- S3 bucket
 
 
 ## Getting started
 
   - [Prerequisites](#prerequisites)
   - [Copy the Project](#copy-the-project)
+  - [Build Lambda function](#build-lambda-function)
   - [Update Scripts](#update-scripts)
 
-
 ### Prerequisites
-
 To install and run this project you need to have the following prerequisites installed:
-- (optional) install package manager (windows: [chocolatey](https://chocolatey.org/install), mac: [brew](https://brew.sh))
-    With a package manager it becomes easy to install/update the below prerequisites (e.g. installing [awscli](https://chocolatey.org/packages/awscli) with 'choco', 'choco install awscli').
-- install aws cli (see [link](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html))
-- configure aws cli credentials (see [link](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html))
+- (optional) install package manager. 
+	- windows: [chocolatey](https://chocolatey.org/install), 
+	- mac: [brew](https://brew.sh)
+	- With a package manager it becomes easy to install/update the below prerequisites. 
+    For example:  ```choco install awscli' ```
+- [install aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+- [configure aws cli credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
     create a profile and remember the name of this profile (if no name was specified, the name of the profile is 'default')
 - install python3 
 - install pip3
@@ -34,7 +37,8 @@ Create your own copy of the 'cdx-records' directory on your local client.
 
 ### Update Scripts
 
-Update the following parameters in the X.tf file:
+Update the following parameters in the [terraform files](/terraform):
+- bla  
 
 
 ## Run
