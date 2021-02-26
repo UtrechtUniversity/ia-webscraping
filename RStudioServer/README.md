@@ -4,8 +4,8 @@
 This project deploys a EC2 instance and install R studio.
 A R studio user is created and an ip-whitelist is added to only give access to preconfigured IP's.
 
-Note, after successfull deployment your deployment will cost money. Depending on the instance type the hourly rate differs, the more cpu/memory the more expensive.
-Make sure to destroy your resources if you are not using them, this will reduce the cost. Any intermediate results can be saved to S3 before detroying the deployment and downloaded on the new instance when continuing the analyses.
+Note, after successful deployment your deployment will cost money. Depending on the instance type the hourly rate differs, the more cpu/memory the more expensive.
+Make sure to destroy your resources if you are not using them, this will reduce the cost. Any intermediate results can be saved to S3 before destroying the deployment and downloaded on the new instance when continuing the analyses.
 
 The following R packages are pre-installed:
 - devtools
@@ -13,6 +13,10 @@ The following R packages are pre-installed:
 - itertools
 - tm
 - wordcloud
+- doParallel
+- psych
+- reshape
+- topicmodels
 - aws.s3
 - aws.ec2metadata
 
