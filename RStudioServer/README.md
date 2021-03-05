@@ -46,10 +46,10 @@ Create your own copy of the 'RStudioServer' directory on your local client.
 Change the following lines in the 'terraform.tfstate' script
 - line 2: deployment_name > The name of your deployment; all resources will be tagged with this name
 - line 3: deployment_owner > Your email address; this will indicate that the AWS resources are owned by you
-- line 4: ip_whitelist > The IP address or list of addresses that should be granted access to Rstudio. The value should be a list of CIDR ranges, a CIDR range is the ip address of your laptop followed by '/32'
+- line 4: ip_whitelist > The IP address or list of addresses that should be granted access to Rstudio. The value should be a list of CIDR ranges, a CIDR range is the ip address of your laptop followed by '/32' (note, use the 'ipconfig /all' command in a command prompt to determine the IP address of your Windows laptop. Your ip address will be the IPv4 address.)
 - line 5: s3_buckets > The list of S3 bucket ARN(s) that the rstudio server needs to access (ARN = amazon resource name; can be found by looking up the s3 buckets in the AWS console>s3). Note, to give access to the full s3 bucket the ARN must be followed by '/*' or optionally with an additional key to only grant access to a folder.
 (e.g. ["arn:aws:s3:::crunchbase-dev-rjbood/*"] or ["arn:aws:s3:::crunchbase-dev-rjbood/data/*"]).
-- line 7: instance_type > the [instance type](https://aws.amazon.com/ec2/instance-types/) of your server; this describe how much CPU cores/memory the server gets. IMPORTANT, a larger instance type (i.e. more cpu and/or memory) is also more expensive
+- line 7: instance_type > the [instance type](https://aws.amazon.com/ec2/instance-types/) of your server; this describe how much CPU cores/memory the server gets. IMPORTANT, a larger instance type (i.e. more cpu and/or memory) is also more expensive. For test deployments, use t3.large (2 cpu cores, 8 GiB memory). For analysis deployments where more cpu cores are required, use 'm5.2xlarge' (8 cpu cores, 32 GiB memory) or 'm5.xlarge' (4 cpu cores, 16 GiB memory).
 - line 10: rstudio_user > the username which will be used to login in RStudio
 - line 11: rstudio_user_pwd > the PWD of the R studio user
 
@@ -80,7 +80,7 @@ The terraform apply command is used to apply the changes required to reach the d
 
 #### Login to Rstudio
 After a successfull deployment, Terraform will print the output. Here you will find the DNS address of your R studio deployment (note, only IP addresses that are whitelisted can access this DNS)
-Note, after a successfull terraform deployment, it will take between 3-10 minutes before Rstudio and all R packages are installed.
+Note, after a successfull terraform deployment, it will take between 10-15 minutes before Rstudio and all R packages are installed.
 
 Example output:
 ``` sh
@@ -114,7 +114,7 @@ library(aws.ec2metadata) # Load EC2 metadata library to use credentials from EC2
 
 # Load data from S3 (bucket='crunchbase-dev-rjbood', key='Crunchbase_test_sample.csv')
 path <- 's3://crunchbase-dev-rjbood/Crunchbase_test_sample.csv'
-data <- aws.s3::s3read_using(read.csv, object = path, stringAsFactors = False, fileEncoding="latin1")
+data <- aws.s3::s3read_using(read.csv, object = path, fileEncoding="latin1")
 
 # Write data back to S3 (bucket='crunchbase-dev-rjbood', key='Crunchbase_write_sample.csv')
 aws.s3::s3write_using(data, write.csv, object = 's3://crunchbase-dev-rjbood/Crunchbase_write_sample.csv')
