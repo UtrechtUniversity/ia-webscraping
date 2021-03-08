@@ -11,7 +11,7 @@ data "aws_ami" "amazon-linux-2" {
 }
 
 data "template_file" "install_rstudio" {
-  template = "${file("./install_rstudio.sh")}"
+  template = file("./install_rstudio.sh")
 
   vars = {
     rstudio_user = var.rstudio_user
