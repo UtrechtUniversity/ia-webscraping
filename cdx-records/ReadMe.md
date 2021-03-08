@@ -1,6 +1,6 @@
 # Lambda: get CDX records
 
-This project collects for a given set of inital urls CDX records from the Internet Archive.
+This project collects -for a given set of inital urls- CDX records from the Internet Archive.
 The code in this project is run at AWS.
 Terraform is used to deploy the following AWS resources:
 - SQS queue 
@@ -66,9 +66,9 @@ profile = [YOUR_AWS_PROFILE]
 This file is automatically loaded by terraform and the values are assigned values to the variables in ```main.tf``` and ```provider.tf``` 
 
 NB: The file ```backend.tf``` should be modified directly in the code :
-	- line 5: provide your AWS bucket name (see [Prerequisites](#prerequisites))
-	- line 7: provide your AWS profile name (see [Prerequisites](#prerequisites)
-	- line 10: change the key with a key of your own, e.g. 'terraform/state/<your-lambda function>/terraform.tfstate' 
+- line 5: provide your AWS bucket name (see [Prerequisites](#prerequisites))
+- line 7: provide your AWS profile name (see [Prerequisites](#prerequisites)
+- line 10: change the key with a key of your own, e.g. 'terraform/state/<your-lambda function>/terraform.tfstate' 
 
 
 ## Run
@@ -104,12 +104,10 @@ $ terraform apply "./plan"
 ```
 
 ### Fill SQS queue
-The 'fill_sqs_queue.py' script creates a single SQS message in the SQS queue.
+The 'fill_sqs_queue.py' script adds messages to the finitial SQS queue.
+These messages each contain a set of urls. The lambda function takes messages from the SQS queue and -for the given urls- requests CDX records from the Internet Archive.
 
-Before running the script, update the SQS queue that is hardcoded in the python code:
-line 7: change the sqs ID in to the SQS ID that was created by 'terraform apply' command (check the terraform output)
-
-set the following environment variable in your cmd prompt:
+Before running the script, set the following environment variable in your cmd prompt:
 - 'AWS_PROFILE'=<'AWS profile'>
 
 Execute the script:
@@ -118,7 +116,12 @@ Execute the script:
 $ cd ..
 
 # Fill sqs queue
-$ python fill_sqs_queue.py
+$ python fill_sqs_queue.py[ARGUMENTS]
+
+Arguments:
+  -i  path to thefile containing urls 
+  -q  SQS ID as created by 'terraform apply' command (check the terraform output)
+
 ```
 
 ### Test Function
