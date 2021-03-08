@@ -1,7 +1,9 @@
 import boto3
+import csv
+import json
 import os
 import requests
-import csv
+
 from urllib.parse import urlparse
 from urllib.error import URLError
 
@@ -99,15 +101,25 @@ def get_urls(domain):
 
         return urls
 
-def sqs_send_message(content):
+def sqs_send_message(content, delay_offset=0):
     # Create SQS client
     sqs = boto3.client('sqs')
 
     queue_url = os.environ['sqs_fetch_id']
+    target_bucket = os.environ['target_bucket_id']
+
+    [url, timestamp, dgst] = content
+    file_name = (f'{url}.{timestamp}.txt').replace('/', '_')
+
+    body = {
+        'url': f'http://web.archive.org/web/{timestamp}/{url}',
+        'file_name': file_name,
+        'bucket_name': target_bucket
+    }
 
     response = sqs.send_message(
         QueueUrl=queue_url,
-        DelaySeconds=10,
+        DelaySeconds=10 + delay_offset,
         MessageAttributes={
                 'Title': {
                     'DataType': 'String',
@@ -118,9 +130,9 @@ def sqs_send_message(content):
                     'StringValue': 'mvos'
                 },
             },
-        MessageBody=(
-            f'My message:{content}')
+        MessageBody=json.dumps(body)
     ) 
+    
     return response
 
 def restore_domain(domain,url):
@@ -149,9 +161,13 @@ def sqs_send_urls(domain,records):
                 '.JPG','.jpeg','.bmp','.mp4','.svg','woff2','.ico','.ttf']
     rec_filtered = [[url,time,dgst] for url,time,dgst in rec_list if not url.endswith(tuple(blacklist))] 
 
-    # Divide list into batches of 5 records; send batch to sqs
-    for rec in chunks(rec_filtered,5):
-        response = sqs_send_message(rec)
+    # # I BELIEVE THE CHUNKING IS DONE BY AWS
+    # # Divide list into batches of 5 records; send batch to sqs
+    # for rec in chunks(rec_filtered,5):
+    #     response = sqs_send_message(rec)
+    #     print(f"Sent message {response['MessageId']} to fetch queue")
+    for i, rec in enumerate(rec_filtered):
+        response = sqs_send_message(rec, i)
         print(f"Sent message {response['MessageId']} to fetch queue")
 
 def main():

@@ -35,6 +35,7 @@ def send_custom_message(queue_url,content,index=1):
     return response
 
 def main():
+    boto3.setup_default_session(profile_name='crunch')
     queue_url = "https://sqs.eu-central-1.amazonaws.com/080708105962/crunchbase-dev-mvos-lambda-cdx-queue"
 
     # Retrieve list of companies from csv file 

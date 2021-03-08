@@ -1,5 +1,6 @@
 provider "aws" {
-  version                 = "~> 3.21"
+  # Warning: Version constraints inside provider configuration blocks are deprecated
+  # version                 = "~> 3.21"
   region                  = "eu-central-1"
-  profile                 = "default"
+  profile                 = "crunch"
 }
