@@ -2,10 +2,20 @@ import boto3
 import csv
 import json
 import os
+import re
 import requests
 
 from urllib.parse import urlparse
 from urllib.error import URLError
+
+EXTENSIONS = [
+    '.css','.js','.map','.xml','.png','.woff','.gif','.jpg', 'eot',
+    '.jpeg','.bmp','.mp4','.svg','woff2','.ico','.ttf', 'robots.txt'
+]
+
+BLACKLIST = [
+    re.compile(ext + '(\?|$)', re.IGNORECASE) for ext in EXTENSIONS
+]
 
 
 def handler(event, context):
@@ -108,7 +118,7 @@ def sqs_send_message(content, delay_offset=0):
     queue_url = os.environ['sqs_fetch_id']
     target_bucket = os.environ['target_bucket_id']
 
-    [url, timestamp, dgst] = content
+    [url, timestamp] = content
     file_name = (f'{url}.{timestamp}.txt').replace('/', '_')
 
     body = {
@@ -116,7 +126,6 @@ def sqs_send_message(content, delay_offset=0):
         'file_name': file_name,
         'bucket_name': target_bucket
     }
-
     response = sqs.send_message(
         QueueUrl=queue_url,
         DelaySeconds=10 + delay_offset,
@@ -132,7 +141,6 @@ def sqs_send_message(content, delay_offset=0):
             },
         MessageBody=json.dumps(body)
     ) 
-    
     return response
 
 def restore_domain(domain,url):
@@ -141,7 +149,7 @@ def restore_domain(domain,url):
     domain_split.reverse()
     domain_key = ",".join(domain_split) + ')'
     
-    new = url.replace(domain_key,domain)
+    new = url.replace(domain_key,domain).strip()
     
     return new
 
@@ -156,17 +164,15 @@ def sqs_send_urls(domain,records):
     # Restore original domain in CDX url
     rec_list = [[restore_domain(domain,url),time,dgst] for url,time,dgst in records]   
     
-    # Filter out urls with non-text extension
-    blacklist = ['.css','.js','.map','.xml','.png','.woff','.gif','.jpg',
-                '.JPG','.jpeg','.bmp','.mp4','.svg','woff2','.ico','.ttf']
-    rec_filtered = [[url,time,dgst] for url,time,dgst in rec_list if not url.endswith(tuple(blacklist))] 
+    # filter out unwanted urls and identical pages
+    rec_filtered = {}
+    for [url, time, dgst] in rec_list:
+        if dgst not in rec_filtered.keys() and \
+            not any([bool(r.search(url)) for r in BLACKLIST]):
 
-    # # I BELIEVE THE CHUNKING IS DONE BY AWS
-    # # Divide list into batches of 5 records; send batch to sqs
-    # for rec in chunks(rec_filtered,5):
-    #     response = sqs_send_message(rec)
-    #     print(f"Sent message {response['MessageId']} to fetch queue")
-    for i, rec in enumerate(rec_filtered):
+            rec_filtered[dgst] = [url, time]
+
+    for i, (_, rec) in enumerate(rec_filtered.items()):
         response = sqs_send_message(rec, i)
         print(f"Sent message {response['MessageId']} to fetch queue")
 
