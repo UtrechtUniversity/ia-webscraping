@@ -72,6 +72,7 @@ resource "aws_sqs_queue" "sqs_fetch_queue" {
   max_message_size          = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
+  visibility_timeout_seconds = 45
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.failed_to_scrape.arn
     maxReceiveCount     = 1000
@@ -92,7 +93,7 @@ resource "aws_lambda_function" "test_lambda" {
   source_code_hash = chomp(file("../lambda-cdx-crunchbase-dev-mvos.zip.sha256"))
 
   runtime = "python3.8"
-  timeout = "30"
+  timeout = 60
   memory_size = "128"
 
   environment {
@@ -248,7 +249,7 @@ resource "aws_lambda_function" "scraper" {
   source_code_hash = chomp(file("../lambda-scraper-dev-csk.zip.sha256"))
   
   runtime = "python3.8"
-  timeout=30
+  timeout= 45
   memory_size = "128"
 }
 

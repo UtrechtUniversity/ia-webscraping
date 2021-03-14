@@ -17,6 +17,8 @@ BLACKLIST = [
     re.compile(ext + '(\?|$)', re.IGNORECASE) for ext in EXTENSIONS
 ]
 
+BATCH_SIZE = 25
+
 
 def handler(event, context):
     print("Started lambda-sqs example.")
@@ -172,8 +174,10 @@ def sqs_send_urls(domain,records):
 
             rec_filtered[dgst] = [url, time]
 
+    # note the provided delay seconds, first 25 (BATCH_SIZE) have 
+    # a delaytime of 10, the next batch has a delay time of 20
     for i, (_, rec) in enumerate(rec_filtered.items()):
-        response = sqs_send_message(rec, i)
+        response = sqs_send_message(rec, 10 + 10 *( i // BATCH_SIZE))
         print(f"Sent message {response['MessageId']} to fetch queue")
 
 def main():

@@ -43,6 +43,8 @@ def main():
     comp_nested = df_comp.values
     companies = [c[0] for c in comp_nested]
 
+    # companies = companies[0:10]
+
     # Convert companies list into multiple message bodies;
     # Send corresponding messages to SQS queue
     for i,comp in enumerate(chunk_join(companies,5)):
