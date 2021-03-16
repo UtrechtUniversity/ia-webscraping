@@ -77,10 +77,7 @@ async def fetch_all(records):
 
 
 def lambda_handler(event, context):
-    # wrapper results
-
-    print('-->', len(event['Records']))
-
+    print('received records:', len(event['Records']))
     loop = asyncio.get_event_loop() 
     future = asyncio.ensure_future(fetch_all(event['Records'])) 
     loop.run_until_complete(future) 
@@ -107,56 +104,4 @@ if __name__ == '__main__':
         ]
     }
 
-    print(workload)
-
-    #lambda_handler(workload, None)
-
-
-
-    # # iterate over the records in this message/event
-    # for record in event['Records']:
-    #     # get the necessary data: url, filename and bucket
-    #     data = json.loads(record['body'])
-    #     url = data['url']
-    #     file_name = data['file_name']
-    #     bucket_name = data['bucket_name']
-
-        # s3 client
-        # s3_client = boto3.client('s3')
-        
-    #     # start fetching
-    #     try:
-    #         # request
-    #         resp = requests.get(url)
-    #         if resp.status_code == 200:
-    #             # resp.content is a byte array, convert to string
-    #             response = resp.content.decode("utf-8", "ignore")
-    #             # strip style, script, svg
-    #             response = clean_html(response)
-    #             # parse
-    #             soup = BeautifulSoup(response, 'html.parser')
-    #             # locate the body
-    #             body = soup.body
-    #             # get text
-    #             strings = list(body.strings)
-    #             # get text
-    #             text = clean_text(strings)
-
-    #             # store
-    #             if text != '':
-    #                 s3 = boto3.resource('s3')
-    #                 s3.Object(bucket_name, file_name).put(Body=text)
-            
-    #             # append to result
-    #             result_body.append( { 'url': url, 'statusCode': 200 })
-
-    #         else:
-    #             result_body.append( { 'url': url, 'statusCode': resp.status_code })
-
-    #     except Exception as e:
-    #         result_body.append({ 'url': url, 'statusCode': 400, 'message': str(e) })
-
-    # return {
-    #     'statusCode': 200,
-    #     'body': json.dumps(result_body)
-    # }
+    lambda_handler(workload, None)
