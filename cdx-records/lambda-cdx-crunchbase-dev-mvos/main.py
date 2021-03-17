@@ -3,7 +3,6 @@ import csv
 import json
 import os
 import re
-import requests
 import aiohttp
 import asyncio
 import time
@@ -13,11 +12,11 @@ import sys
 from urllib.parse import urlparse
 from urllib.error import URLError
 
-if os.environ.get('logging'):
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-else:
-    logging.basicConfig(stream=sys.stdout, level=logging.ERROR)
 logger = logging.getLogger()
+if os.environ.get('logging'):
+    logger.setLevel(logging.INFO)
+else:
+    logger.setLevel(logging.ERROR)
 
 EXTENSIONS = [
     '.css','.js','.map','.xml','.png','.woff','.gif','.jpg', 'eot',
@@ -28,23 +27,31 @@ BLACKLIST = [
     re.compile(ext + '(\?|$)', re.IGNORECASE) for ext in EXTENSIONS
 ]
 
-TARGET_BUCKET = os.environ.get('target_bucket_id')
+TARGET_BUCKET = os.environ.get('target_bucket_id', "test")
+
+# SQS_FETCH_LIMIT: max number of allowed messages in Fetch queue; if reached, temporarily stop cdx lambda function
+SQS_FETCH_LIMIT = int(os.environ.get('sqs_fetch_limit', 1000))
+# SQS_MESSAGE_DELAY_INCREASE: the delay time (sec) that should be added to every batch of 30 sqs fetch messages 
+SQS_MESSAGE_DELAY_INCREASE = int(os.environ.get('sqs_message_delay_increase', 10))
+# SQS_CDX_MAX_MESSAGES: the max number of messages received from the CDX SQS queue
+SQS_CDX_MAX_MESSAGES = int(os.environ.get('sqs_cdx_max_messages', 10))
 
 # Define queues as SQS resource
-FETCH_SQS_LIMIT = 2000
 sqs = boto3.resource('sqs')
 fetch_sqs_queue = sqs.Queue(os.environ['sqs_fetch_id'])
 cdx_sqs_queue = sqs.Queue(os.environ['sqs_cdx_id'])
 
+
 def fetch_queue_limit_reached():
-    return int(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessages')) > FETCH_SQS_LIMIT
+    # Total number of messages in fetch queue = visible message + delayed messages
+    return int(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessages')) + int(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessagesDelayed')) > SQS_FETCH_LIMIT
 
 def get_cdx_sqs_messages():
     response = cdx_sqs_queue.receive_messages(
         AttributeNames=[
             'SentTimestamp'
         ],
-        MaxNumberOfMessages=10,
+        MaxNumberOfMessages=SQS_CDX_MAX_MESSAGES,
         MessageAttributeNames=[
             'All'
         ],
@@ -92,31 +99,29 @@ async def get_urls(sqs_message_id, sqs_receipt_handle, domain, session):
             'showResumeKey': 'true',
         }
 
-    async with session.get('http://web.archive.org/cdx/search/cdx', params=payload) as response:
-        response_list = await response.json()
-
-    # Extraction
-    if not response_list:
-        logger.info("No records available for '%s'", domain)
-        return {
-            "domain" : domain,
-            "urls" : None
-        }
-
-    header = response_list[0]
-    if not response_list[-2]:
-        resume_key = response_list[-1][0]
-        urls = response_list[1:-2]  # The before last one is always empty -> -2
-    else:
-        resume_key = "finished"
-        urls = response_list[1:]
-
-    return {
+    ret = {
         "sqs_message_id" : sqs_message_id,
         "sqs_receipt_handle" : sqs_receipt_handle,
         "domain" : domain,
-        "urls" : urls
+        "urls" : None
     }
+
+    async with session.get('http://web.archive.org/cdx/search/cdx', params=payload) as response:
+        response_list = await response.json()
+
+    if response_list:
+        header = response_list[0]
+        if not response_list[-2]:
+            resume_key = response_list[-1][0]
+            urls = response_list[1:-2]  # The before last one is always empty -> -2
+        else:
+            resume_key = "finished"
+            urls = response_list[1:]
+        ret['urls'] = urls
+    else:
+        logger.warning("No records available for '%s'", domain)
+    
+    return ret
 
 def restore_domain(domain,url):
     """Restore original domain name in CDX url"""
@@ -139,33 +144,32 @@ def filter_urls(domain, records):
             not any([bool(r.search(url)) for r in BLACKLIST]):
 
             rec_filtered[dgst] = [url, time]
+    logger.info("'%d' Filtered URLs for domain '%s'", len(rec_filtered), domain)
     return rec_filtered
 
-def send_urls_to_fetch_sqs_queue(urls):
-    delay_offset=0
+def send_urls_to_fetch_sqs_queue(domain, urls, delay_offset=0):
     messages_send=0
-    id = 0 # every message in a batch must have a unique ID
     batch_messages = []
-    for i, (_, rec) in enumerate(urls.items()):
+    for index, (_, rec) in enumerate(urls.items()):
         [url, timestamp] = rec
         file_name = (f'{url}.{timestamp}.txt').replace('/', '_')
               
         if len(batch_messages) == 10:
+            # Max batch size (N=10) reached; send batch
             sqs_send_message_batch(batch_messages)
+            batch_messages = []
             messages_send += 10
             if ((delay_offset < 900) and (messages_send % 30 == 0)):
-                # for every 30 messages send; increase message delay with 10 seconds
-                delay_offset += 10
-            batch_messages = []
+                # for every 30 messages send; increase message delay until 900 (max allowed value)
+                delay_offset += SQS_MESSAGE_DELAY_INCREASE
             
-        id += 1
         batch_messages.append(
             { 
-                'Id': str(id),
+                'Id': str(index), # every message in a batch must have a unique ID; use index for this
                 'MessageBody': json.dumps({
                     'url': f'http://web.archive.org/web/{timestamp}/{url}',
                     'file_name': file_name,
-                    'bucket_name': target_bucket
+                    'bucket_name': TARGET_BUCKET
                 }),
                 'DelaySeconds': delay_offset,
                 'MessageAttributes': {
@@ -180,11 +184,12 @@ def send_urls_to_fetch_sqs_queue(urls):
                 }
             }
         )
-    #Send last messages
-    print(f"messages send: {messages_send + len(batch_messages)}")
+
+    #Send last messages to SQS
     if len(batch_messages) > 0:
         sqs_send_message_batch(batch_messages)
-        batch_messages = []
+    logger.info("'%d' messages send to fetch SQS queue for domain '%s'", messages_send + len(batch_messages), domain)
+    return delay_offset
    
 
 def sqs_send_message_batch(messages):
@@ -192,10 +197,7 @@ def sqs_send_message_batch(messages):
         Entries=messages
     )
     if response.get('Failed'):
-        logger.warning("Failed to send the following messages to SQS: '%s'", str(response['Failed']))
-    else:
-        pass
-        #logger.info("Successfully send the following messages to SQS: '%s'", str(response['Successful']))
+        logger.error("Failed to send the following messages to SQS: '%s'", str(response['Failed']))
 
 def chunks(L, n):
     """ Yield successive n-sized chunks from L """
@@ -207,7 +209,7 @@ def handler(event, context):
 
     ## Check number of messages in Fetch queue
     if fetch_queue_limit_reached():
-        logger.info("Number of messages in fetch sqs queue higher than limit of '%d'; early return", FETCH_SQS_LIMIT)
+        logger.info("Number of messages in fetch sqs queue higher than limit of '%d'; early return", SQS_FETCH_LIMIT)
         return
 
     ## get messages from CDX Queue
@@ -218,15 +220,17 @@ def handler(event, context):
 
     ## Filter urls, send filtered urls to sqs
     processed_messages = []
-    print(len(task_results))
+    delay_offset=0 # The length of time, in seconds, for which a specific message is delayed before visible in the SQS queue
     for result in task_results:
         if result['urls'] is None:
             # No URLS found, continue with next one TODO: should we delete this message?
             continue
-        print("number of urls found: " + str(len(result['urls'])))
 
+        logger.info("'%d' URLS found for domain '%s'", len(result['urls']), result['domain'])
+        
         ## Send filtered urls to fetch SQS queue
-        send_urls_to_fetch_sqs_queue(filter_urls(result['domain'], result['urls']))
+        delay_offset = send_urls_to_fetch_sqs_queue(result['domain'], filter_urls(result['domain'], result['urls']), delay_offset)
+
         processed_messages.append({
             'Id': result['sqs_message_id'],
             'ReceiptHandle': result['sqs_receipt_handle']
@@ -234,10 +238,12 @@ def handler(event, context):
 
     ## Delete processed SQS messages CDX queue in batches of 10
     for proc_messages_batch in chunks(processed_messages, 10):
-        print("delete the following messages from cdx queue: " + str(proc_messages_batch))
         cdx_sqs_queue.delete_messages(
             Entries=proc_messages_batch
         )
+
+    logger.info("Number of CDX SQS messages processed: '%d'; Delete messages from CDX SQS", len(processed_messages))
+    logger.info("End CDX Lambda")
 
 def main():
     """Test script to run from command line"""
@@ -273,7 +279,7 @@ def main():
         Entries=batch_messages
     )
     
-    handler(None, None)
+    #handler(None, None)
 
 
 

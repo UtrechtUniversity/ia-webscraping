@@ -93,7 +93,7 @@ resource "aws_lambda_function" "test_lambda" {
   source_code_hash = chomp(file("../lambda-cdx-crunchbase-dev-mvos.zip.sha256"))
 
   runtime = "python3.8"
-  timeout = 60
+  timeout = 120
   memory_size = "128"
 
   environment {
@@ -102,7 +102,10 @@ resource "aws_lambda_function" "test_lambda" {
       sqs_cdx_arn = aws_sqs_queue.sqs_cdx_queue.arn,
       sqs_fetch_id = aws_sqs_queue.sqs_fetch_queue.id,
       sqs_fetch_arn = aws_sqs_queue.sqs_fetch_queue.arn,
-      target_bucket_id = aws_s3_bucket.result_bucket.id
+      target_bucket_id = aws_s3_bucket.result_bucket.id,
+      sqs_fetch_limit = "1000",
+      sqs_message_delay_increase = "10",
+      sqs_cdx_max_messages = "10"
     }
   }
 
