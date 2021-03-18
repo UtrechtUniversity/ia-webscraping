@@ -11,6 +11,9 @@ import boto3
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 
+# create a global sqs client
+SQS_CLIENT = boto3.client('sqs')
+
 
 def clean_html(response):
     """strips svg / script / style tags"""
@@ -35,11 +38,33 @@ def clean_text(text):
     return '\n'.join(text)
 
 
+def send_fail_message(queue, url, reason='unknown'):
+    body = {
+        'url': url,
+        'reason': reason
+    }
+    SQS_CLIENT.send_message(
+        QueueUrl=queue,
+        DelaySeconds=1,
+        MessageAttributes={
+            'Author': {
+                'DataType': 'String',
+                'StringValue': 'scraper lambda'
+            },
+        },
+        MessageBody=json.dumps(body)
+    ) 
+    return True
+
+
 async def fetch(record, session):
     data = json.loads(record['body'])
     url = data['url']
     file_name = data['file_name']
     bucket_name = data['bucket_name']
+
+    # failure queue
+    failure_queue = os.environ['sqs_failures_id']
 
     async with session.get(url) as response:
         r = await response.read()
@@ -53,17 +78,30 @@ async def fetch(record, session):
                 soup = BeautifulSoup(contents, 'html.parser')
                 # locate the body
                 body = soup.body
-                # get text
-                strings = list(body.strings)
-                # get text
-                text = clean_text(strings)
 
-                if text != '':
-                    s3 = boto3.resource('s3')
-                    s3.Object(bucket_name, file_name).put(Body=text)
+                if body is not None:
+                    # get text
+                    strings = list(body.strings)
+                    # get text
+                    text = clean_text(strings)
+
+                    if text != '':
+                        s3 = boto3.resource('s3')
+                        s3.Object(bucket_name, file_name).put(Body=text)
+
+                else:
+                    send_fail_message(failure_queue, url, 'no html text found in body')
 
             except Exception as e:
-                print(e)
+                send_fail_message(failure_queue, url, str(e))
+
+        else:
+            send_fail_message(
+                failure_queue, 
+                url, 
+                f'response status: {response.status}'
+            )
+
             
 
 async def fetch_all(records):

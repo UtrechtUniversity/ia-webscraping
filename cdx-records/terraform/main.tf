@@ -74,7 +74,7 @@ resource "aws_sqs_queue" "sqs_fetch_queue" {
   receive_wait_time_seconds = 10
   visibility_timeout_seconds = 45
   redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.failed_to_scrape.arn
+    deadLetterTargetArn = aws_sqs_queue.scrape_lambda_dead_letters.arn
     maxReceiveCount     = 1000
   })
 }
@@ -216,6 +216,28 @@ resource "aws_iam_policy" "lambda_listens_to_sqs" {
   POLICY
 }
 
+# policy to let lambda write to failure sqs
+resource "aws_iam_policy" "lambda_sends_to_failure_sqs" {
+  name        = "lambda_sends_to_failure_sqs"
+  path        = "/"
+  description = "SQS policy"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sqs:SendMessage",
+        ]
+        Effect   = "Allow"
+        Resource = aws_sqs_queue.scrape_failures.arn
+      },
+    ]
+  })
+}
+
 # ATTACHING POLICIES TO LAMBDA ROLE
 resource "aws_iam_role_policy_attachment" "lambda_policies_i" {
   role       = aws_iam_role.iam_for_scraper_lambda.name
@@ -228,6 +250,10 @@ resource "aws_iam_role_policy_attachment" "lambda_policies_ii" {
 resource "aws_iam_role_policy_attachment" "lambda_policies_iii" {
   role       = aws_iam_role.iam_for_scraper_lambda.name
   policy_arn = aws_iam_policy.lambda_listens_to_sqs.arn
+}
+resource "aws_iam_role_policy_attachment" "lambda_policies_iv" {
+  role       = aws_iam_role.iam_for_scraper_lambda.name
+  policy_arn = aws_iam_policy.lambda_sends_to_failure_sqs.arn
 }
 
 data "aws_s3_bucket_object" "lambda_scraper" {
@@ -251,11 +277,28 @@ resource "aws_lambda_function" "scraper" {
   runtime = "python3.8"
   timeout= 45
   memory_size = "128"
+
+    
+  environment {
+    variables = {
+      sqs_failures_id = aws_sqs_queue.scrape_failures.id,
+      sqs_failures_arn = aws_sqs_queue.scrape_failures.arn,
+    }
+  }
 }
 
 # the dead letter queue
-resource "aws_sqs_queue" "failed_to_scrape" {
-  name                      = "failed_to_scrape"
+resource "aws_sqs_queue" "scrape_lambda_dead_letters" {
+  name                      = "scrape_lambda_dead_letters"
+  delay_seconds             = 90
+  max_message_size          = 2048
+  message_retention_seconds = 86400
+  receive_wait_time_seconds = 10
+}
+
+# the dead letter queue
+resource "aws_sqs_queue" "scrape_failures" {
+  name                      = "scrape_failures"
   delay_seconds             = 90
   max_message_size          = 2048
   message_retention_seconds = 86400
