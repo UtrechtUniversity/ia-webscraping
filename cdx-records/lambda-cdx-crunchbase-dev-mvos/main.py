@@ -135,7 +135,12 @@ def restore_domain(domain,url):
 
 def filter_urls(domain, records):
     # Restore original domain in CDX url
-    rec_list = [[restore_domain(domain,url),time,dgst] for url,time,dgst in records]   
+    rec_list = [[restore_domain(domain,url),time,dgst] for url,time,dgst in records]
+
+    # sort on timestamp in reversed order => make sure the oldest pages
+    # are to be found in the end. With identical digests, the oldest 
+    # version will be picked in the rec_filtered dictionary
+    rec_list = sorted(rec_list, key=lambda item: item[1], reverse=True)
     
     ## filter out unwanted urls and identical pages
     rec_filtered = {}
@@ -144,6 +149,7 @@ def filter_urls(domain, records):
             not any([bool(r.search(url)) for r in BLACKLIST]):
 
             rec_filtered[dgst] = [url, time]
+
     logger.info("'%d' Filtered URLs for domain '%s'", len(rec_filtered), domain)
     return rec_filtered
 
