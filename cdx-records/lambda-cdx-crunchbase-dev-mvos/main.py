@@ -20,7 +20,8 @@ else:
 
 EXTENSIONS = [
     '.css','.js','.map','.xml','.png','.woff','.gif','.jpg', 'eot',
-    '.jpeg','.bmp','.mp4','.svg','woff2','.ico','.ttf', 'robots.txt'
+    '.jpeg','.bmp','.mp4','.svg','woff2','.ico','.ttf', 'robots.txt',
+    '/wp-json/'
 ]
 
 BLACKLIST = [
