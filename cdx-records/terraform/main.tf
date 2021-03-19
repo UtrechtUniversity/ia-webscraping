@@ -103,9 +103,11 @@ resource "aws_lambda_function" "test_lambda" {
       sqs_fetch_id = aws_sqs_queue.sqs_fetch_queue.id,
       sqs_fetch_arn = aws_sqs_queue.sqs_fetch_queue.arn,
       target_bucket_id = aws_s3_bucket.result_bucket.id,
-      sqs_fetch_limit = "1000",
-      sqs_message_delay_increase = "10",
-      sqs_cdx_max_messages = "10"
+      sqs_fetch_limit = var.sqs_fetch_limit,
+      sqs_message_delay_increase = var.sqs_message_delay_increase,
+      sqs_cdx_max_messages = var.sqs_cdx_max_messages,
+      cdx_lambda_n_iterations = var.cdx_lambda_n_iterations,
+      cdx_logging_level = var.cdx_logging_level
     }
   }
 
