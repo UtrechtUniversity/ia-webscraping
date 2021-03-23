@@ -1,17 +1,17 @@
 #----------- EC2 instance --------
 
-data "aws_ami" "amazon-linux-2" {
- most_recent = true
- owners = ["amazon"]
+// data "aws_ami" "amazon-linux-2" {
+//  most_recent = true
+//  owners = ["amazon"]
 
- filter {
-   name   = "name"
-   values = ["amzn2-ami-hvm*"]
- }
-}
+//  filter {
+//    name   = "name"
+//    values = ["amzn2-ami-hvm*"]
+//  }
+// }
 
 data "template_file" "install_rstudio" {
-  template = "${file("./install_rstudio.sh")}"
+  template = file("./install_rstudio.sh")
 
   vars = {
     rstudio_user = var.rstudio_user
@@ -22,7 +22,8 @@ data "template_file" "install_rstudio" {
 }
 
 resource "aws_instance" "rstudio-server" {
-  ami           = data.aws_ami.amazon-linux-2.id
+  // ami           = data.aws_ami.amazon-linux-2.id
+  ami = "ami-0518d8d22ae90fc37"
   instance_type = var.instance_type
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
   user_data = data.template_file.install_rstudio.rendered

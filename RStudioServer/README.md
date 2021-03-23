@@ -4,8 +4,8 @@
 This project deploys a EC2 instance and install R studio.
 A R studio user is created and an ip-whitelist is added to only give access to preconfigured IP's.
 
-Note, after successfull deployment your deployment will cost money. Depending on the instance type the hourly rate differs, the more cpu/memory the more expensive.
-Make sure to destroy your resources if you are not using them, this will reduce the cost. Any intermediate results can be saved to S3 before detroying the deployment and downloaded on the new instance when continuing the analyses.
+Note, after successful deployment your deployment will cost money. Depending on the instance type the hourly rate differs, the more cpu/memory the more expensive.
+Make sure to destroy your resources if you are not using them, this will reduce the cost. Any intermediate results can be saved to S3 before destroying the deployment and downloaded on the new instance when continuing the analyses.
 
 The following R packages are pre-installed:
 - devtools
@@ -13,6 +13,10 @@ The following R packages are pre-installed:
 - itertools
 - tm
 - wordcloud
+- doParallel
+- psych
+- reshape
+- topicmodels
 - aws.s3
 - aws.ec2metadata
 
@@ -23,13 +27,32 @@ This section describes the steps that are required to deploy, login, destroy the
 ### Prerequisites 
 
 Before deploying this RStudioServer, the following required resources need to be setup:
+note: when installing software on windows, make sure to start a cmd prompt with admin permissions.
 - (optional) install package manager (windows: [chocolatey](https://chocolatey.org/install), mac: [brew](https://brew.sh))
     With a package manager it becomes easy to install/update the below prerequisites (e.g. installing [awscli](https://chocolatey.org/packages/awscli) with 'choco', 'choco install awscli').
 - install aws cli (see [link](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html))
+Windows
+```sh
+    choco install awscli
+```
+Mac
+```sh
+    brew install awscli
+```
 - configure aws cli credentials (see [link](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html))
-    create a profile and remember the name of this profile (if no name was specified, the name of the profile is 'default')
+    create a 'crunch' profile, with the following command:
+```sh
+    aws configure --profile crunch
+```
 - install [terraform](https://www.terraform.io/downloads.html)
-
+Windows
+```sh
+    choco install terraform
+```
+Mac
+```sh
+    brew install terraform
+```
 
 ### Run Terraform script
 
@@ -39,25 +62,23 @@ Create your own copy of the 'RStudioServer' directory on your local client.
 
 ### Change build.sh parameters
 
-Change the following lines in the 'terraform.tfstate' script
-- line 2: deployment_name > The name of your deployment; all resources will be tagged with this name
-- line 3: deployment_owner > Your email address; this will indicate that the AWS resources are owned by you
-- line 4: ip_whitelist > The IP address or list of addresses that should be granted access to Rstudio. The value should be a list of CIDR ranges, a CIDR range is the ip address of your laptop followed by '/32'
-- line 5: s3_buckets > The list of S3 bucket ARN(s) that the rstudio server needs to access (ARN = amazon resource name; can be found by looking up the s3 buckets in the AWS console>s3). Note, to give access to the full s3 bucket the ARN must be followed by '/*' or optionally with an additional key to only grant access to a folder.
-(e.g. ["arn:aws:s3:::crunchbase-dev-rjbood/*"] or ["arn:aws:s3:::crunchbase-dev-rjbood/data/*"]).
-- line 7: instance_type > the [instance type](https://aws.amazon.com/ec2/instance-types/) of your server; this describe how much CPU cores/memory the server gets. IMPORTANT, a larger instance type (i.e. more cpu and/or memory) is also more expensive
-- line 10: rstudio_user > the username which will be used to login in RStudio
-- line 11: rstudio_user_pwd > the PWD of the R studio user
+Create a 'terraform.tfvars' file with the following 7 variables and the value.
+- line 1: deployment_name > The name of your deployment; all resources will be tagged with this name (e.g. deployment_name="example-deployment")
+- line 2: deployment_owner > Your email address; this will indicate that the AWS resources are owned by you (e.g. deployment_name="test@example.com")
+- line 3: ip_whitelist > The IP address or list of addresses that should be granted access to Rstudio. The value should be a list of CIDR ranges, a CIDR range is the ip address of your laptop followed by '/32' (note, use the 'curl http://checkip.amazonaws.com' command in a command prompt to determine the IP address of your Windows laptop. You could also lookup this 'http://checkip.amazonaws.com' url in your browser.) (e.g. ip_whitelist=["192.0.2.0/32"])
+- line 4: s3_buckets > The list of S3 bucket ARN(s) that the rstudio server needs to access (ARN = amazon resource name; can be found by looking up the s3 buckets in the AWS console>s3). Note, to give access to the full s3 bucket the bucket ARN must be specified and the bucket ARN followed by '/\*' to give access to all objects in that bucket
+(e.g. s3_buckets=["arn:aws:s3:::crunchbase-dev-rjbood", "arn:aws:s3:::crunchbase-dev-rjbood/*"]).  Alternatively, you could only grant access to a folder
+(e.g. s3_buckets=["arn:aws:s3:::crunchbase-dev-rjbood/data", "arn:aws:s3:::crunchbase-dev-rjbood/data/*"]).
+- line 5: instance_type > the [instance type](https://aws.amazon.com/ec2/instance-types/) of your server; this describe how much CPU cores/memory the server gets. (e.g. instance_type="t3.large"). IMPORTANT, a larger instance type (i.e. more cpu and/or memory) is also more expensive. For test deployments, use t3.large (2 cpu cores, 8 GiB memory). For analysis deployments where more cpu cores are required, use 'm5.2xlarge' (8 cpu cores, 32 GiB memory) or 'm5.xlarge' (4 cpu cores, 16 GiB memory).
+- line 6: rstudio_user > the username which will be used to login in RStudio (e.g. rstudio_user="exampleuser")
+- line 7: rstudio_user_pwd > the PWD of the R studio user (e.g. rstudio_user_pwd="ex@mple!")
 
 #### provider.tf
 Terraform relies on plugins called "providers" to interact with remote systems like AWS. 
 The provider.tf file contains the configuration of the providers that Terraform requires to install and deploy the resources of the Terraform deployment.
 
-Update the following paramters in the provider.tf file:
-- line 4: change the profile name 'crunch' with the name of your AWS profile (i.e. 'default', see Prerequisites)
-
 #### INIT
-The terraform init command is used to initialize a working directory containing Terraform configuration files. This is the first command that should be run after writing a new Terraform configuration or cloning an existing one from version control. It is safe to run this command multiple times.
+The terraform init command is used to initialize a working directory containing Terraform configuration files. This is the first command that should be run after writing a new Terraform configuration or cloning an existing one from version control. It's safe to run this command multiple times. 
 ``` sh
     ./RStudioServer> terraform init
 ```
@@ -76,7 +97,7 @@ The terraform apply command is used to apply the changes required to reach the d
 
 #### Login to Rstudio
 After a successfull deployment, Terraform will print the output. Here you will find the DNS address of your R studio deployment (note, only IP addresses that are whitelisted can access this DNS)
-Note, after a successfull terraform deployment, it will take between 3-10 minutes before Rstudio and all R packages are installed.
+Note, after a successfull terraform deployment, it will take between 10-15 minutes before Rstudio and all R packages are installed.
 
 Example output:
 ``` sh
@@ -110,7 +131,7 @@ library(aws.ec2metadata) # Load EC2 metadata library to use credentials from EC2
 
 # Load data from S3 (bucket='crunchbase-dev-rjbood', key='Crunchbase_test_sample.csv')
 path <- 's3://crunchbase-dev-rjbood/Crunchbase_test_sample.csv'
-data <- aws.s3::s3read_using(read.csv, object = path, stringAsFactors = False, fileEncoding="latin1")
+data <- aws.s3::s3read_using(read.csv, object = path, fileEncoding="latin1")
 
 # Write data back to S3 (bucket='crunchbase-dev-rjbood', key='Crunchbase_write_sample.csv')
 aws.s3::s3write_using(data, write.csv, object = 's3://crunchbase-dev-rjbood/Crunchbase_write_sample.csv')

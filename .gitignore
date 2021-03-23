@@ -1,3 +1,5 @@
+.DS_Store
+
 # Deployment packages
 *.zip
 *.zip.sha256
