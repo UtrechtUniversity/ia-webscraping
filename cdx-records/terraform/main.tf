@@ -288,6 +288,7 @@ resource "aws_lambda_function" "scraper" {
     variables = {
       sqs_failures_id = aws_sqs_queue.scrape_failures.id,
       sqs_failures_arn = aws_sqs_queue.scrape_failures.arn,
+      scraper_logging_level = var.scraper_logging_level
     }
   }
 }

@@ -13,6 +13,16 @@
      }
  }
 
+  variable "scraper_logging_level" {
+     description = "set the log level, log messages which are less severe than level will be ignored"
+     type = string
+     default = "error"
+     validation {
+        condition = var.scraper_logging_level == "info" || var.scraper_logging_level == "error" 
+        error_message = "Allowed values are: 'info' or 'error'."
+     }
+ }
+
  variable "sqs_fetch_limit" {
      description = "max number of allowed messages in Fetch SQS queue. When this limit is reached, no new messages are added"
      type = string

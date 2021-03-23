@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import re
 import requests
@@ -13,6 +14,16 @@ from bs4 import BeautifulSoup
 
 # create a global sqs client
 SQS_CLIENT = boto3.client('sqs')
+
+# logging
+logger = logging.getLogger()
+if os.environ.get('scraper_logging_level', 'error') == "info":
+    logger.setLevel(logging.INFO)
+else:
+    logger.setLevel(logging.ERROR)
+
+# failure sqs
+failure_sqs_queue = os.environ.get('sqs_failures_id','https://sqs.eu-central-1.amazonaws.com/080708105962/terraform-example-queue-rjbood')
 
 
 def clean_html(response):
@@ -64,7 +75,7 @@ async def fetch(record, session):
     bucket_name = data['bucket_name']
 
     # failure queue
-    failure_queue = os.environ['sqs_failures_id']
+    failure_queue = failure_sqs_queue
 
     async with session.get(url) as response:
         r = await response.read()
@@ -90,12 +101,15 @@ async def fetch(record, session):
                         s3.Object(bucket_name, file_name).put(Body=text)
 
                 else:
+                    logger.info(f'scraper lambda could not find any text: "{url}"')
                     send_fail_message(failure_queue, url, 'no html text found in body')
 
             except Exception as e:
+                logger.error(f'scraper lambda failed to scrape "{url}"\nException: {str(e)}')
                 send_fail_message(failure_queue, url, str(e))
 
         else:
+            logger.error(f'scraper lambda failed to scrape "{url}"\nResponse status: {response.status}')
             send_fail_message(
                 failure_queue, 
                 url, 
@@ -115,7 +129,7 @@ async def fetch_all(records):
 
 
 def lambda_handler(event, context):
-    print('received records:', len(event['Records']))
+    logger.info(f'scraper lambda received {len(event["Records"])} messages')
     loop = asyncio.get_event_loop() 
     future = asyncio.ensure_future(fetch_all(event['Records'])) 
     loop.run_until_complete(future) 
