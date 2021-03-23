@@ -1,5 +1,7 @@
+import argparse
 import boto3
 import pandas as pd
+from pathlib import Path
 
 def chunk_join(lst,n):
     """Yield successive n-sized chunks from lst;
@@ -40,6 +42,7 @@ def main():
 
     # Retrieve list of companies from csv file 
     df_comp = pd.read_csv("companies.csv")
+
     comp_nested = df_comp.values
     companies = [c[0] for c in comp_nested]
 
@@ -53,6 +56,7 @@ def main():
     # Send corresponding messages to SQS queue
     for i,comp in enumerate(companies):
         res = send_custom_message(queue_url,comp,i)
+
         print(f"Message ID: {res['MessageId']}")
 
 if __name__ == "__main__":
