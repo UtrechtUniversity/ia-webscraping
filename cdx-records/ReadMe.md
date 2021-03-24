@@ -104,7 +104,7 @@ $ terraform apply "./plan"
 ```
 
 ### Fill SQS queue
-The 'fill_sqs_queue.py' script adds messages to the finitial SQS queue.
+The 'fill_sqs_queue.py' script adds messages to the initial SQS queue.
 These messages each contain a set of urls. The lambda function takes messages from the SQS queue and -for the given urls- requests CDX records from the Internet Archive.
 
 Before running the script, set the following environment variable in your cmd prompt:
@@ -123,6 +123,12 @@ Arguments:
   -q  SQS ID as created by 'terraform apply' command (check the terraform output)
 
 ```
+
+### Get Metrics
+The 'get_cdx_scrape_logs.py' script can be used to query the cloudwatch logs, to retrieve the metrics of the CDX Lambda funtion.
+The output of this script is a csv file containing: domain, run id, number of urls fetched from internet archive, number of filtered urls.
+Because there is a maximum on the number of results that cloudwatch can return (10.000), the script is currently configured to query the result of 1 single day (24 hours).
+The date is hardcoded and should be updated before running the script. The output filename contains the date for which the results were collected.
 
 ### Test Function
 Look up your newly create Lambda function in the AWS console (note, make sure that the console is set to the correct region 'eu-central-1').

@@ -46,3 +46,10 @@
      type = string
      default = "2"
  } 
+
+ variable "cdx_run_id" {
+     description = "the ID of the crunchbase scrape run; this will be added as identifier to the cdx metrics logged in cloudwatch"
+     type = string
+     default = "1"
+ } 
+

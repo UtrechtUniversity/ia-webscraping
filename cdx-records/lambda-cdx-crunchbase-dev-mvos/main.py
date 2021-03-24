@@ -46,6 +46,8 @@ SQS_CDX_MAX_MESSAGES = int(os.environ.get('sqs_cdx_max_messages', 10))
 #       - send urls to fetch queue
 #       - delete messages from CDX queue
 CDX_LAMBDA_N_ITERATIONS = int(os.environ.get('cdx_lambda_n_iterations', 2))
+# RUN_NUMBER: the ID of the crunchbase scrape run; this will be added as identifier to the cdx metrics logged in cloudwatch
+CDX_RUN_ID = int(os.environ.get('cdx_run_id', 1))
 
 # Define queues as SQS resource
 sqs = boto3.resource('sqs')
@@ -167,7 +169,6 @@ def filter_urls(domain, records):
 
             rec_filtered[dgst] = [url, time]
 
-    logger.info("'%d' Filtered URLs for domain '%s'", len(rec_filtered), domain)
     return rec_filtered
 
 def send_urls_to_fetch_sqs_queue(domain, urls, delay_offset=0):
@@ -211,7 +212,6 @@ def send_urls_to_fetch_sqs_queue(domain, urls, delay_offset=0):
     #Send last messages to SQS
     if len(batch_messages) > 0:
         sqs_send_message_batch(batch_messages)
-    logger.info("'%d' messages send to fetch SQS queue for domain '%s'", messages_send + len(batch_messages), domain)
     return delay_offset
    
 
@@ -256,12 +256,15 @@ def handler(event, context):
         processed_messages = []
         delay_offset=0 # The length of time, in seconds, for which a specific message is delayed before visible in the SQS queue
         for result in task_results:
+
             if result['urls'] is None:
                 handle_domain_no_records(result['domain'], result['error'])
             else:
-                logger.info("'%d' URLS found for domain '%s'", len(result['urls']), result['domain'])
                 ## Send filtered urls to fetch SQS queue
-                delay_offset = send_urls_to_fetch_sqs_queue(result['domain'], filter_urls(result['domain'], result['urls']), delay_offset)
+                filteredUrls = filter_urls(result['domain'], result['urls'])
+                delay_offset = send_urls_to_fetch_sqs_queue(result['domain'], filteredUrls, delay_offset)
+
+            logger.info("[Metrics] run:%d domain:%s n_urls:%d n_filtered_urls:%d", CDX_RUN_ID, domain, len(result[urls]), len(filteredUrls))
 
             processed_messages.append({
                 'Id': result['sqs_message_id'],

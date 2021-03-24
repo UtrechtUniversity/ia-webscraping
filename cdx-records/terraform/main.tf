@@ -107,7 +107,8 @@ resource "aws_lambda_function" "test_lambda" {
       sqs_message_delay_increase = var.sqs_message_delay_increase,
       sqs_cdx_max_messages = var.sqs_cdx_max_messages,
       cdx_lambda_n_iterations = var.cdx_lambda_n_iterations,
-      cdx_logging_level = var.cdx_logging_level
+      cdx_logging_level = var.cdx_logging_level,
+      cdx_run_id = var.cdx_run_id
     }
   }
 
