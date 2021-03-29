@@ -37,27 +37,26 @@ def send_custom_message(queue_url,content,index=1):
     return response
 
 def main():
-    boto3.setup_default_session(profile_name='crunch')
-    queue_url = "https://sqs.eu-central-1.amazonaws.com/080708105962/crunchbase-dev-mvos-lambda-cdx-queue"
+    parser = argparse.ArgumentParser(description='Fill sqs queue with urls for which CDX records should be fetched')
+    parser.add_argument("--queue", "-q", help="Enter sqs ID ")
+    parser.add_argument("--infile", "-f", help="Enter path to folder containing zipfiles")    
+    args = parser.parse_args()
+
+    boto3.setup_default_session(profile_name='crunch')             
+    #queue_url = "https://sqs.eu-central-1.amazonaws.com/080708105962/crunchbase-dev-mvos-lambda-cdx-queue"
+    queue_url = args.queue 
 
     # Retrieve list of companies from csv file 
-    df_comp = pd.read_csv("companies.csv")
-
-    comp_nested = df_comp.values
-    companies = [c[0] for c in comp_nested]
-
-    print(df_comp)
-
+    df_comp = pd.read_csv(args.infile)
     companies = list(df_comp['Website'])
 
-    # companies = companies[0:10]
-
-    # Convert companies list into multiple message bodies;
+    # Convert companies list into single message bodies;
     # Send corresponding messages to SQS queue
     for i,comp in enumerate(companies):
         res = send_custom_message(queue_url,comp,i)
 
         print(f"Message ID: {res['MessageId']}")
+        print(f"Message : {res}")
 
 if __name__ == "__main__":
     main()
