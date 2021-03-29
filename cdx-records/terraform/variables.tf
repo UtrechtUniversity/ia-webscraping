@@ -3,6 +3,19 @@
 
 
 # CDX LAMBDA: settings
+
+ variable "lambda_cdx" {
+     description = "name of the lambda function that collects CDX records from the Internet Archive"
+     type = string
+     default = "lambda-cdx-crunchbase-dev-mvos"
+ } 
+
+ variable "bucket_name" {
+     description = "name of the s3 bucket where lambda zip and tfstate are stored"
+     type = string
+     default = "crunchbase-dev-mvos-source"
+ } 
+
  variable "cdx_logging_level" {
      description = "set the log level, log messages which are less severe than level will be ignored"
      type = string

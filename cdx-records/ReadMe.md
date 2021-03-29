@@ -25,7 +25,7 @@ To install and run this project you need to have the following prerequisites ins
     For example:  ```choco install awscli' ```
 - [install aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 - [configure aws cli credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
-    create a profile and remember the name of this profile (if no name was specified, the name of the profile is 'default')
+    create a profile with the name 'crunch' 
 - install python3 
 - install pip3
 - install [terraform](https://www.terraform.io/downloads.html)
@@ -35,20 +35,23 @@ To install and run this project you need to have the following prerequisites ins
 
 Create your own copy of the 'cdx-records' directory on your local client.
 
-### Build lambda function
+### Build lambda functions
 
-The 'build.sh' script will:
-- install all requirements from the 'requirements.txt' file in the [lambda folder](/lambda-cdx-crunchbase-dev-mvos)
+The 'build.sh' script will for each of the lambda functions:
+- install all requirements from the 'requirements.txt' file in the lambda folder
 - create a zip file 
 - calculate a hash of this zipfile and write this to 'example_lambda.zip.sha256'
 - upload the zip file to the s3 bucket
 
-#First update the build script: 
+# First update the build script: 
 - line 16: provide your AWS bucket name (see [Prerequisites](#prerequisites))
-- line 16: provide your AWS profile name (see [Prerequisites](#prerequisites)
 
-#Then run the build script
+# Then run the build script
 ```
+# Go to terraform folder
+$ cd cdx-records
+
+# Build zip files
 $ ./build.sh 
 ```
 
@@ -61,13 +64,11 @@ bucket_name = [YOUR_BUCKET_NAME]
 
 lambda_name = [YOUR_LAMBDA_NAME]
 
-profile = [YOUR_AWS_PROFILE]
 ```
 This file is automatically loaded by terraform and the values are assigned values to the variables in ```main.tf``` and ```provider.tf``` 
 
 NB: The file ```backend.tf``` should be modified directly in the code :
 - line 5: provide your AWS bucket name (see [Prerequisites](#prerequisites))
-- line 7: provide your AWS profile name (see [Prerequisites](#prerequisites)
 - line 10: change the key with a key of your own, e.g. 'terraform/state/<your-lambda function>/terraform.tfstate' 
 
 
@@ -116,7 +117,7 @@ Execute the script:
 $ cd ..
 
 # Fill sqs queue
-$ python fill_sqs_queue.py[ARGUMENTS]
+$ python fill_sqs_queue.py [ARGUMENTS]
 
 Arguments:
   -i  path to thefile containing urls 

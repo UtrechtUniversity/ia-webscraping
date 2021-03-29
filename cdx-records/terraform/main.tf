@@ -8,7 +8,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = var.lambda_name
+  name = var.lambda_cdx
 
   assume_role_policy = <<EOF
 {
@@ -55,11 +55,11 @@ resource "aws_iam_policy" "sqs_send_policy" {
 
 data "aws_s3_bucket_object" "lambda_code" {
   bucket = var.bucket_name
-  key    = "cdx-records/${var.lambda_name}.zip"
+  key    = "cdx-records/${var.lambda_cdx}.zip"
 }
 
 resource "aws_sqs_queue" "sqs_cdx_queue" {
-  name                      = "${var.lambda_name}-cdx-queue"
+  name                      = "${var.lambda_cdx}-cdx-queue"
   delay_seconds             = 10
   max_message_size          = 2048
   message_retention_seconds = 86400
@@ -67,7 +67,7 @@ resource "aws_sqs_queue" "sqs_cdx_queue" {
 }
 
 resource "aws_sqs_queue" "sqs_fetch_queue" {
-  name                      = "${var.lambda_name}-fetch-queue"
+  name                      = "${var.lambda_cdx}-fetch-queue"
   delay_seconds             = 10
   max_message_size          = 2048
   message_retention_seconds = 86400
@@ -80,7 +80,7 @@ resource "aws_sqs_queue" "sqs_fetch_queue" {
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  function_name = var.lambda_name
+  function_name = var.lambda_cdx
   description = "terraform lambda cdx"
   role          = aws_iam_role.iam_for_lambda.arn
 
@@ -90,7 +90,7 @@ resource "aws_lambda_function" "test_lambda" {
   handler       = "main.handler"
 
   # Check hash code for code changes
-  source_code_hash = chomp(file("../${var.lambda_name}.zip.sha256"))
+  source_code_hash = chomp(file("../${var.lambda_cdx}.zip.sha256"))
 
   runtime = "python3.8"
   timeout = 120
