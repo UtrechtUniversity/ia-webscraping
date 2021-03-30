@@ -264,7 +264,7 @@ def handler(event, context):
                 filteredUrls = filter_urls(result['domain'], result['urls'])
                 delay_offset = send_urls_to_fetch_sqs_queue(result['domain'], filteredUrls, delay_offset)
 
-            logger.info("[Metrics] run:%d domain:%s n_urls:%d n_filtered_urls:%d", CDX_RUN_ID, domain, len(result[urls]), len(filteredUrls))
+            logger.info("[Metrics] run:%d domain:%s n_urls:%d n_filtered_urls:%d", CDX_RUN_ID, result['domain'], len(result[urls]), len(filteredUrls))
 
             processed_messages.append({
                 'Id': result['sqs_message_id'],
