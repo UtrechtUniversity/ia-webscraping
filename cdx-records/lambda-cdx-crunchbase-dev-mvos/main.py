@@ -22,11 +22,11 @@ else:
 EXTENSIONS = [
     '.css','.js','.map','.xml','.png','.woff','.gif','.jpg', 'eot',
     '.jpeg','.bmp','.mp4','.svg','woff2','.ico','.ttf', 'robots.txt',
-    '/wp-json/'
+    '/wp-json', '/feed$'
 ]
 
-BLACKLIST = [
-    re.compile(ext + '(\?|$)', re.IGNORECASE) for ext in EXTENSIONS
+BLACKLIST = [ 
+    re.compile(ext + '(\/|\?|$)', re.IGNORECASE) for ext in EXTENSIONS 
 ]
 
 TARGET_BUCKET = os.environ.get('target_bucket_id', "test")
