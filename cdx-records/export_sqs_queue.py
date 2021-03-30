@@ -1,6 +1,6 @@
 import argparse
 import boto3
-import json
+import pandas as pd
 
 
 def parse_arguments():
@@ -19,7 +19,7 @@ def parse_arguments():
     parser.add_argument(
         '--output',
         type=str,
-        default='sqs.json',
+        default='sqs.csv',
         help='path of output csv file'
     )
 
@@ -83,17 +83,19 @@ if __name__ == '__main__':
     # setup client 
     boto3.setup_default_session(profile_name='crunch')
     
-    requested_fields = ['MessageId', 'SentTimestamp', 'Body']
     collected = []
 
-    
     for message in get_messages_from_queue(args['queue_url'], keep_messages):
-        record = { k: v  for k, v in message.items() if k in requested_fields }
-        record['SentTimestamp'] = message['Attributes']['SentTimestamp']
+        record = {
+            'MessageId': message['MessageId'],
+            'SentTimestamp': message['Attributes']['SentTimestamp'],
+            'url': message['Body']['url'],
+            'reason': message['Body']['reason']
+        }
         collected.append(record)
 
-    with open(args['output'], 'w+') as f:
-        json.dump(collected, f)
+    df = pd.DataFrame(collected)
+    df.to_csv(args['output'], index=False)
 
 
 
