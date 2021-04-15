@@ -10,45 +10,5 @@ The ia-webscraping repository utilizes the following AWS services:
 
 Deploying this solution will result in the following scrape pipeline in the AWS Cloud.
 
-```mermaid
-flowchart TB
-
-
-  subgraph Internet["The Internet"]
-    InternetArchive[(InternetArchive)]
-  end
-
-  subgraph ResearcherUU["Researcher (UU)"]
-    FillSQSQueue[/FillSQSQueue.py\]
-  end
-
-  subgraph Lambda_Fetch["Concurrent Fetch Lambda's"]
-    LambdaFetch_1
-    LambdaFetch_2
-    LambdaFetch_N
-  end
-
-  subgraph AWS["AWS Cloud"]
-    SQS_CDX
-    Lambda_CDX
-    Cloudwatch_Trigger
-    SQS_Fetch
-    Lambda_Fetch
-    S3[(AWS S3)]
-  end
-
-  style AWS fill:#eef
-  style Lambda_Fetch fill:#f96
-
-  FillSQSQueue -- Fill SQS --> SQS_CDX
-  Lambda_CDX -- Get URL --> SQS_CDX
-  Lambda_CDX -- CDX API --> InternetArchive  
-  Cloudwatch_Trigger -- Trigger Lambda --> Lambda_CDX
-  Lambda_CDX  -- Create Fetch Tasks -->  SQS_Fetch
-  SQS_Fetch -- Get Fetch Tasks --> Lambda_Fetch
-  Lambda_Fetch -- Get HTML Page --> InternetArchive
-  Lambda_Fetch -- Store HTML page --> S3
-
-  click InternetArchive callback "https://archive.org/"
-```
+![Alt text](docs/architecture_overview.png?raw=true "Architecture Overview")
 
