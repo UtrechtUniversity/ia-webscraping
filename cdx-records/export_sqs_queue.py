@@ -1,6 +1,6 @@
 import argparse
 import boto3
-import json
+import pandas as pd
 
 
 def parse_arguments():
@@ -19,15 +19,15 @@ def parse_arguments():
     parser.add_argument(
         '--output',
         type=str,
-        default='sqs.json',
+        default='sqs.csv',
         help='path of output csv file'
     )
 
     parser.add_argument(
         '--keep-messages',
-        type=bool,
-        default=True,
-        help='path of output csv file'
+        type=int,
+        default=1,
+        help='keep messages in queue after exporting, 1: True, 0: False'
     )
 
     return parser
@@ -66,12 +66,10 @@ def get_messages_from_queue(queue_url, keep_messages=True):
                 )
 
 
-
-
 if __name__ == '__main__':
 
     # example
-    # python export_sqs_queue.py --queue-url https://sqs.eu-central-1.amazonaws.com/080708105962/not_scraped --keep-messages True
+    # python export_sqs_queue.py --queue-url https://sqs.eu-central-1.amazonaws.com/080708105962/not_scraped --keep-messages 1
     
     # get arguments
     parser = parse_arguments()
@@ -80,19 +78,24 @@ if __name__ == '__main__':
     if args['queue_url'] is None:
         raise Exception('No URL was provided')
 
+    keep_messages = False if (args['keep_messages'] == 0) else True
+
     # setup client 
     boto3.setup_default_session(profile_name='crunch')
     
-    requested_fields = ['MessageId', 'SentTimestamp', 'Body']
     collected = []
-    
-    for message in get_messages_from_queue(args['queue_url'], args['keep_messages']):
-        record = { k: v  for k, v in message.items() if k in requested_fields }
-        record['SentTimestamp'] = message['Attributes']['SentTimestamp']
+
+    for message in get_messages_from_queue(args['queue_url'], keep_messages):
+        record = {
+            'MessageId': message['MessageId'],
+            'SentTimestamp': message['Attributes']['SentTimestamp'],
+            'url': message['Body']['url'],
+            'reason': message['Body']['reason']
+        }
         collected.append(record)
 
-    with open(args['output'], 'w+') as f:
-        json.dump(collected, f)
+    df = pd.DataFrame(collected)
+    df.to_csv(args['output'], index=False)
 
 
 
