@@ -3,12 +3,12 @@ import boto3
 import pandas as pd
 from pathlib import Path
 
-def sqs_send_message_batch(messages,queue_url):
+def sqs_send_message_batch(messages,queue_name):
     """send batch of messages to sqs queue"""
     
     # Define queue as SQS resource
     sqs = boto3.resource('sqs')
-    queue = sqs.get_queue_by_name(QueueName=queue_url)
+    queue = sqs.get_queue_by_name(QueueName=queue_name)
         
     response = queue.send_messages(Entries=messages)
     
@@ -55,12 +55,11 @@ def send_urls_to_cdx_queue(companies,queue_url):
 
 def main():
     parser = argparse.ArgumentParser(description='Fill sqs queue with urls for which CDX records should be fetched')
-    parser.add_argument("--queue", "-q", help="Enter sqs ID ")
+    parser.add_argument("--queue", "-q", help="Enter sqs name ")
     parser.add_argument("--infile", "-f", help="Enter path to file with urls")    
     args = parser.parse_args()
 
     boto3.setup_default_session(profile_name='crunch')             
-    #queue_url = "https://sqs.eu-central-1.amazonaws.com/080708105962/crunchbase-dev-mvos-lambda-cdx-queue"
     queue_url = args.queue 
 
     # Retrieve list of companies from csv file 
@@ -68,7 +67,7 @@ def main():
     companies = list(df_comp['Website'])
 
     # Convert companies list into single message bodies;
-    # Send corresponding messages to SQS queue
+    # Send corresponding messages to SQS queue in batches of 10
     send_urls_to_cdx_queue(companies,queue_url)
     
 if __name__ == "__main__":
