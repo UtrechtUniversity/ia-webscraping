@@ -1,5 +1,5 @@
 # This file declares terraform variables that are used in the main file
-# Values are assigned in the assign.tfvars file
+# Values are assigned in the terraform.tfvars file
 
 
 # CDX LAMBDA: settings
