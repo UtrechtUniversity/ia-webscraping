@@ -22,12 +22,11 @@ cdx-records/lambda-cdx/*
 cdx-records/lambda-scrape/*
 
 # but do include these scripts
-!main.py
-!requirements.txt
-!six.py
-!typing_extensions.py
-# ... even if these are in subfolders
-!*/
+!**/main.py
+!**/requirements.txt
+!**/six.py
+!**/typing_extensions.py
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
