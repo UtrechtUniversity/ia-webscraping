@@ -120,8 +120,8 @@ $ cd ..
 $ python fill_sqs_queue.py [ARGUMENTS]
 
 Arguments:
-  -i  path to thefile containing urls 
-  -q  SQS ID as created by 'terraform apply' command (check the terraform output)
+  -f  path to thefile containing urls 
+  -q  SQS ID: human readable name of sqs cdx queue (check the terraform output)
 
 ```
 
