@@ -1,19 +1,19 @@
 output "sqs_cdx_id" {
-    value = aws_sqs_queue.sqs_cdx_queue.id
+    value = module.sqs_cdx.sqs_id
     description = "The URL for the created Amazon SQS queue of the Lambda cdx function."
 }
 
 output "sqs_cdx_arn" {
-    value = aws_sqs_queue.sqs_cdx_queue.arn
+    value = module.sqs_cdx.sqs_arn
     description = "The ARN of the SQS queue of the Lambda cdx function."
 }
 
 output "sqs_fetch_id" {
-    value = aws_sqs_queue.sqs_fetch_queue.id
+    value = module.sqs_fetch.sqs_id
     description = "The URL for the created Amazon SQS queue of the Lambda fetch function."
 }
 
 output "sqs_fetch_arn" {
-    value = aws_sqs_queue.sqs_fetch_queue.arn
+    value = module.sqs_fetch.sqs_arn
     description = "The ARN of the SQS queue of the Lambda fetch function."
 }
