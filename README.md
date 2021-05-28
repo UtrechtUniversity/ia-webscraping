@@ -1,16 +1,53 @@
 # ia-webscraping
 
-# Lambda: get CDX records
+This repository provides code to set up an AWS workflow for collecting and analyzing webpages from the Internet Archive.
+It is developed for the Crunchbase project to assess the sustainability of European startup-companies by analyzing their websites. 
 
-This project collects -for a given set of inital urls- CDX records from the Internet Archive.
-The code in this project is run at AWS.
-Terraform is used to deploy the following AWS resources:
-- SQS queue 
-- Lambda
-- CloudWatch
-- S3 bucket
 
-## Architecture
+## Table of Contents
+
+- [Project Title](#ia-webscraping)
+  - [Table of Contents](#table-of-contents)
+  - [About the Project](#about-the-project)
+    - [Built with](#built-with)
+    - [License](#license)
+    - [Attribution and academic use](#attribution-and-academic-use)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+  - [Usage](#usage)
+    - [Subsection](#subsection)
+  - [Links](#links)
+  - [Contributing](#contributing)
+  - [Notes](#notes)
+  - [Contact](#contact)
+
+## About the Project
+
+**Date**: Jan-Jun 2021
+
+**Researcher**:
+
+- Jip Leendertse (j.leendertse@uu.nl)
+
+**Research Software Engineer**:
+
+- Casper Kaandorp (c.s.kaandorp@uu.nl)
+- Martine de Vos (m.g.devos@uu.nl)
+
+This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/) 
+
+### Built with
+
+- [Terraform](https://www.terraform.io/)
+- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+- [asyncio](https://docs.aiohttp.org/en/stable/glossary.html#term-asyncio)
+
+### License
+
+The code in this project is released under [MIT](LICENSE).
+
+### Architecture
 The ia-webscraping repository utilizes the following AWS services:
 - SQS: to create a queue of scraping tasks, manage the distribution of these tasks among the fetching Lambda functions and give insight in the result of the task.
 - AWS Lambda: to run the fetching code without the need for provisioning or managing servers.
@@ -57,10 +94,10 @@ The 'build.sh' script will for each of the lambda functions:
 - calculate a hash of this zipfile and write this to 'example_lambda.zip.sha256'
 - upload the zip file to the s3 bucket
 
-# First update the build script: 
+**First update the build script**
 - line 16: provide your AWS bucket name (see [Prerequisites](#prerequisites))
 
-# Then run the build script
+**Then run the build script**
 ```
 # Go to terraform folder
 $ cd cdx-records
