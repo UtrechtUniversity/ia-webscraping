@@ -11,16 +11,15 @@ It is developed for the Crunchbase project to assess the sustainability of Europ
   - [About the Project](#about-the-project)
     - [Built with](#built-with)
     - [License](#license)
-    - [Attribution and academic use](#attribution-and-academic-use)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
   - [Usage](#usage)
-    - [Subsection](#subsection)
-  - [Links](#links)
-  - [Contributing](#contributing)
-  - [Notes](#notes)
-  - [Contact](#contact)
+    - [Deploy AWS resources](#deploy-aws-resources)
+    - [Fill SQS queue ](#fill-sqs-queue)
+    - [Test Function](#test-function)
+    - [Clean Up](#clean-up)
+
 
 ## About the Project
 
@@ -49,11 +48,16 @@ The code in this project is released under [MIT](LICENSE).
 
 ### Architecture
 The ia-webscraping repository utilizes the following AWS services:
-- SQS: to create a queue of scraping tasks, manage the distribution of these tasks among the fetching Lambda functions and give insight in the result of the task.
-- AWS Lambda: to run the fetching code without the need for provisioning or managing servers.
-- S3: for storage of the HTML pages
-- CloudWatch: to monitor the metrics of the SQS queue and Lambda functions
-- CloudWatch trigger: to trigger the Lambda function on a timely basis, the interval can be changed to throttle the process
+- **Simple Queueing System**: manage distribution of tasks among Lambda functions and give insight in results
+    - queue with initial urls 
+    - queue with scraping tasks
+- **AWS Lambda**: run code without the need for provisioning or managing servers
+    - lambda to retrieve cdx records for initial urls, filter these and send tasks to scraping queue 
+    - lambda to retrieve webpages for cdx records and send these to s3 bucket
+- **S3**: for storage of the HTML pages
+- **CloudWatch**: monitor and manage AWS services
+   - CloudWatch to monitor the metrics of the SQS queue and Lambda functions
+   - CloudWatch to trigger the Lambda function on a timely basis, the interval can be changed to throttle the process
 
 Deploying this solution will result in the following scrape pipeline in the AWS Cloud.
 
@@ -63,9 +67,9 @@ Deploying this solution will result in the following scrape pipeline in the AWS 
 ## Getting started
 
   - [Prerequisites](#prerequisites)
-  - [Copy the Project](#copy-the-project)
-  - [Build Lambda function](#build-lambda-function)
-  - [Update Scripts](#update-terraform-scripts)
+  - [Installation](#installation)
+  - [Build Lambda function](#build-lambda-functions)
+  - [Update Terraform](#update-terraform)
 
 ### Prerequisites
 To install and run this project you need to have the following prerequisites installed:
@@ -82,22 +86,20 @@ To install and run this project you need to have the following prerequisites ins
 - install [terraform](https://www.terraform.io/downloads.html)
 - create a personal S3 bucket in AWS (region: eu-central-1)
 
-### Copy the Project
-
+### Installation
 Create your own copy of the 'cdx-records' directory on your local client.
 
 ### Build lambda functions
-
 The 'build.sh' script will for each of the lambda functions:
 - install all requirements from the 'requirements.txt' file in the lambda folder
 - create a zip file 
 - calculate a hash of this zipfile and write this to 'example_lambda.zip.sha256'
 - upload the zip file to the s3 bucket
 
-**First update the build script**
+First update the build script
 - line 16: provide your AWS bucket name (see [Prerequisites](#prerequisites))
 
-**Then run the build script**
+Then run the build script
 ```
 # Go to terraform folder
 $ cd cdx-records
@@ -106,7 +108,7 @@ $ cd cdx-records
 $ ./build.sh 
 ```
 
-### Update Terraform Scripts
+### Update Terraform
 
 In the [terraform folder](/terraform) create a file ```terraform.tfvars``` that lists terraform variables and the corresponding values:
 
@@ -122,10 +124,83 @@ NB: The file ```backend.tf``` should be modified directly in the code :
 - line 5: provide your AWS bucket name (see [Prerequisites](#prerequisites))
 - line 10: change the key with a key of your own, e.g. 'terraform/state/<your-lambda function>/terraform.tfstate' 
 
-
-## Run
-- [Deploy AWS resources](#deploy-aws-resources)
+## Usage
+- [Deploy AWS resources](#deploy-aws-resources)	
 - [Fill SQS queue ](#fill-sqs-queue)
 - [Test Function](#test-function)
+- [Monitor Process](#monitor-process)
+- [Collect Results](#collect-results)
 - [Clean Up](#clean-up)
 
+### Deploy AWS resources
+
+#### init
+The terraform init command is used to initialize a working directory containing Terraform configuration files. This is the first command that should be run after writing a new Terraform configuration or cloning an existing one from version control. It is safe to run this command multiple times.
+```
+# Go to terraform folder
+$ cd terraform
+
+# Initialize terraform
+$ terraform init
+```
+
+#### plan
+The terraform plan command is used to create an execution plan. Terraform performs a refresh, unless explicitly disabled, and then determines what actions are necessary to achieve the desired state specified in the configuration files. The optional -out argument can be used to save the generated plan to a file for later execution with terraform apply, which can be useful when running Terraform in automation.
+```
+$ terraform plan -out './plan'
+```
+
+#### apply
+The terraform apply command is used to apply the changes required to reach the desired state of the configuration, or the pre-determined set of actions generated by a terraform plan execution plan.
+By using the “plan” command before “apply,” you’ll be aware of any unforeseen errors or unexpected resource creation/modification!
+```
+$ terraform apply "./plan"
+```
+
+### Fill SQS queue
+The 'fill_sqs_queue.py' script adds messages to the initial SQS queue.
+These messages each contain a set of urls. The lambda function takes messages from the SQS queue and -for the given urls- requests CDX records from the Internet Archive.
+
+Before running the script, set the following environment variable in your cmd prompt:
+- 'AWS_PROFILE'=<'AWS profile'>
+
+Execute the script:
+```
+# Go to cdx folder
+$ cd ..
+
+# Fill sqs queue
+$ python fill_sqs_queue.py [ARGUMENTS]
+
+Arguments:
+  -f  path to thefile containing urls 
+  -q  SQS ID: human readable name of sqs cdx queue (check the terraform output)
+
+```
+
+### Test Function
+Look up your newly create Lambda function in the AWS console (note, make sure that the console is set to the correct region 'eu-central-1').
+Open the function and create a test event for your function. You can use the "hello world" event template.
+The content of the test event is not used by the python code.
+Run you're newly created test event and check the Lambda logs to see the result.	
+
+### Monitor Process
+Monitor process in AWS console	
+	
+The 'get_cdx_scrape_logs.py' script can be used to query the cloudwatch logs, to retrieve the metrics of the CDX Lambda funtion.
+The output of this script is a csv file containing: domain, run id, number of urls fetched from internet archive, number of filtered urls.
+Because there is a maximum on the number of results that cloudwatch can return (10.000), the script is currently configured to query the result of 1 single day (24 hours).
+The date is hardcoded and should be updated before running the script. The output filename contains the date for which the results were collected.
+
+### Collect Results
+Results are collected in s3 bucket
+
+### Clean up
+Run the following [command](https://www.terraform.io/docs/commands/destroy.html), to cleanup the AWS resources that were deployed by terraform:
+```
+# Go to terraform folder
+$ cd terraform
+
+# Clean up AWS resources
+$ terraform destroy
+```
