@@ -47,7 +47,7 @@ resource "aws_iam_policy" "sqs_send_policy" {
           "sqs:SendMessage",
         ]
         Effect   = "Allow"
-        Resource = aws_sqs_queue.sqs_fetch_queue.arn
+        Resource = module.sqs_fetch.sqs_arn
       },
     ]
   })
@@ -58,26 +58,40 @@ data "aws_s3_bucket_object" "lambda_code" {
   key    = "cdx-records/${var.lambda_cdx}.zip"
 }
 
-resource "aws_sqs_queue" "sqs_cdx_queue" {
-  name                      = "${var.lambda_cdx}-cdx-queue"
-  delay_seconds             = 10
-  max_message_size          = 2048
-  message_retention_seconds = 86400
-  receive_wait_time_seconds = 10
+
+#################################
+###    SQS QUEUES    ###
+#################################
+
+module "sqs_cdx" {
+  source   = "./sqs"
+  sqs_name = "${var.lambda_cdx}-cdx-queue"
 }
 
-resource "aws_sqs_queue" "sqs_fetch_queue" {
-  name                      = "${var.lambda_cdx}-fetch-queue"
-  delay_seconds             = 10
-  max_message_size          = 2048
-  message_retention_seconds = 86400
-  receive_wait_time_seconds = 10
+module "sqs_fetch" {
+  source    = "./sqs"
+  sqs_name  = "${var.lambda_cdx}-fetch-queue"
   visibility_timeout_seconds = 120
   redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.scrape_lambda_dead_letters.arn
+    deadLetterTargetArn = module.scrape_letters.sqs_arn
     maxReceiveCount     = 1000
   })
 }
+
+module "scrape_letters" {
+  source    = "./sqs"
+  sqs_name  = "scrape_lambda_dead_letters"
+  delay_seconds = 90
+}
+
+module "scrape_failures" {
+  source    = "./sqs"
+  sqs_name  = "scrape_failures"
+  delay_seconds  = 90
+}
+
+#################################
+
 
 resource "aws_lambda_function" "test_lambda" {
   function_name = var.lambda_cdx
@@ -98,10 +112,10 @@ resource "aws_lambda_function" "test_lambda" {
 
   environment {
     variables = {
-      sqs_cdx_id = aws_sqs_queue.sqs_cdx_queue.id,
-      sqs_cdx_arn = aws_sqs_queue.sqs_cdx_queue.arn,
-      sqs_fetch_id = aws_sqs_queue.sqs_fetch_queue.id,
-      sqs_fetch_arn = aws_sqs_queue.sqs_fetch_queue.arn,
+      sqs_cdx_id = module.sqs_cdx.sqs_id,
+      sqs_cdx_arn = module.sqs_cdx.sqs_arn,
+      sqs_fetch_id = module.sqs_fetch.sqs_id,
+      sqs_fetch_arn = module.sqs_fetch.sqs_arn,
       target_bucket_id = aws_s3_bucket.result_bucket.id,
       sqs_fetch_limit = var.sqs_fetch_limit,
       sqs_message_delay_increase = var.sqs_message_delay_increase,
@@ -207,7 +221,7 @@ resource "aws_iam_policy" "lambda_listens_to_sqs" {
           "sqs:ReceiveMessage",
           "sqs:GetQueueAttributes"
         ],
-        "Resource": [ "${aws_sqs_queue.sqs_fetch_queue.arn}" ],
+        "Resource": [ "${module.sqs_fetch.sqs_arn}" ],
         "Effect": "Allow"
       },
       {
@@ -238,7 +252,7 @@ resource "aws_iam_policy" "lambda_sends_to_failure_sqs" {
           "sqs:SendMessage",
         ]
         Effect   = "Allow"
-        Resource = aws_sqs_queue.scrape_failures.arn
+        Resource = module.scrape_failures.sqs_arn
       },
     ]
   })
@@ -287,30 +301,13 @@ resource "aws_lambda_function" "scraper" {
     
   environment {
     variables = {
-      sqs_failures_id = aws_sqs_queue.scrape_failures.id,
-      sqs_failures_arn = aws_sqs_queue.scrape_failures.arn,
+      sqs_failures_id = module.scrape_failures.sqs_id,
+      sqs_failures_arn = module.scrape_failures.sqs_arn,
       scraper_logging_level = var.scraper_logging_level
     }
   }
 }
 
-# the dead letter queue
-resource "aws_sqs_queue" "scrape_lambda_dead_letters" {
-  name                      = "scrape_lambda_dead_letters"
-  delay_seconds             = 90
-  max_message_size          = 2048
-  message_retention_seconds = 86400
-  receive_wait_time_seconds = 10
-}
-
-# the dead letter queue
-resource "aws_sqs_queue" "scrape_failures" {
-  name                      = "scrape_failures"
-  delay_seconds             = 90
-  max_message_size          = 2048
-  message_retention_seconds = 86400
-  receive_wait_time_seconds = 10
-}
 
 # THIS MAKES THE sqs_fetch_queue TRIGGER THE scraping LAMBDA
 # ##########################################################
@@ -319,18 +316,16 @@ resource "aws_lambda_permission" "allows_fetch_sqs_to_trigger_scraper_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.scraper.function_name
   principal     = "sqs.amazonaws.com"
-  source_arn    = aws_sqs_queue.sqs_fetch_queue.arn
+  source_arn    = module.sqs_fetch.sqs_arn
 }
 
 resource "aws_lambda_event_source_mapping" "trigger_scraper" {
   batch_size       = 5 # set the amount of messages send to the lambda
-  event_source_arn = aws_sqs_queue.sqs_fetch_queue.arn
+  event_source_arn = module.sqs_fetch.sqs_arn
   enabled          = true
   function_name    = aws_lambda_function.scraper.arn
   depends_on = [aws_iam_policy.lambda_listens_to_sqs] # let's see if this works
 }
-
-
 
 #################################
 ###    Cloudwatch Trigger     ###

@@ -17,6 +17,17 @@ terraform.rc
 *.tfstate
 *.tfstate.*
 
+# Ignore all installed requirements from lambda functions
+cdx-records/lambda-cdx/*
+cdx-records/lambda-scrape/*
+
+# but do include these scripts
+!**/main.py
+!**/requirements.txt
+!**/six.py
+!**/typing_extensions.py
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
