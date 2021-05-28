@@ -92,6 +92,7 @@ module "scrape_failures" {
 
 #################################
 
+
 resource "aws_lambda_function" "test_lambda" {
   function_name = var.lambda_cdx
   description = "terraform lambda cdx"
