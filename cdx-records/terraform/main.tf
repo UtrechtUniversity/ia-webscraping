@@ -1,62 +1,23 @@
 ################################
-### CDX-part of the pipeline ###
+### LAMBDA FUNCTIONS ###
 ################################
 
-resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  role       = aws_iam_role.iam_for_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
-}
+module "lambda_cdx" {
+    source = "./lambda"
+    lambda_name = "${var.lambda_name}-cdx" 
+    bucket_name = "crunchbase-dev-mvos-source"
+    sqs_fetch_arn = module.sqs_fetch.sqs_arn
 
-resource "aws_iam_role" "iam_for_lambda" {
-  name = var.lambda_cdx
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    env_vars = {
+      sqs_cdx_id = module.sqs_cdx.sqs_id,
+      sqs_cdx_arn = module.sqs_cdx.sqs_arn,
+      sqs_message_delay_increase = var.sqs_message_delay_increase,
+      sqs_cdx_max_messages = var.sqs_cdx_max_messages,
+      cdx_lambda_n_iterations = var.cdx_lambda_n_iterations,
+      cdx_logging_level = var.cdx_logging_level,
+      cdx_run_id = var.cdx_run_id
+        }
     }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "sqs_send" {
-  role       = aws_iam_role.iam_for_lambda.name
-  policy_arn = aws_iam_policy.sqs_send_policy.arn
-}
-
-resource "aws_iam_policy" "sqs_send_policy" {
-  name        = "sqs_send_policy"
-  path        = "/"
-  description = "SQS send policy example"
-
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression result to valid JSON syntax.
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "sqs:SendMessage",
-        ]
-        Effect   = "Allow"
-        Resource = module.sqs_fetch.sqs_arn
-      },
-    ]
-  })
-}
-
-data "aws_s3_bucket_object" "lambda_code" {
-  bucket = var.bucket_name
-  key    = "cdx-records/${var.lambda_cdx}.zip"
-}
 
 
 #################################
@@ -90,43 +51,6 @@ module "scrape_failures" {
   delay_seconds  = 90
 }
 
-#################################
-
-
-resource "aws_lambda_function" "test_lambda" {
-  function_name = var.lambda_cdx
-  description = "terraform lambda cdx"
-  role          = aws_iam_role.iam_for_lambda.arn
-
-  s3_bucket = data.aws_s3_bucket_object.lambda_code.bucket
-  s3_key = data.aws_s3_bucket_object.lambda_code.key
-
-  handler       = "main.handler"
-
-  # Check hash code for code changes
-  source_code_hash = chomp(file("../${var.lambda_cdx}.zip.sha256"))
-
-  runtime = "python3.8"
-  timeout = 120
-  memory_size = "128"
-
-  environment {
-    variables = {
-      sqs_cdx_id = module.sqs_cdx.sqs_id,
-      sqs_cdx_arn = module.sqs_cdx.sqs_arn,
-      sqs_fetch_id = module.sqs_fetch.sqs_id,
-      sqs_fetch_arn = module.sqs_fetch.sqs_arn,
-      target_bucket_id = aws_s3_bucket.result_bucket.id,
-      sqs_fetch_limit = var.sqs_fetch_limit,
-      sqs_message_delay_increase = var.sqs_message_delay_increase,
-      sqs_cdx_max_messages = var.sqs_cdx_max_messages,
-      cdx_lambda_n_iterations = var.cdx_lambda_n_iterations,
-      cdx_logging_level = var.cdx_logging_level,
-      cdx_run_id = var.cdx_run_id
-    }
-  }
-
-}
 
 #################################
 ### Scraping part of pipeline ###

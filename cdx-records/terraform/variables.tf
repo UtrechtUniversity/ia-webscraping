@@ -4,7 +4,7 @@
 
 # CDX LAMBDA: settings
 
- variable "lambda_cdx" {
+ variable "lambda_name" {
      description = "name of the lambda function that collects CDX records from the Internet Archive"
      type = string
      default = "lambda-cdx-crunchbase-dev-mvos"

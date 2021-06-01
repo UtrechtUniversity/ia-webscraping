@@ -15,5 +15,5 @@ output "sqs_fetch_id" {
 
 output "sqs_fetch_arn" {
     value = module.sqs_fetch.sqs_arn
-    description = "The ARN of the SQS queue of the Lambda fetch function."
+    description = "The ARN of the SQS queue which lists all fetch tasks."
 }

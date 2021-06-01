@@ -1,0 +1,14 @@
+output "lambda_arn" {
+    value = aws_lambda_function.lambda.arn
+    description = "The ARN of the lambda function"
+}
+
+output "lambda_name" {
+    value = aws_lambda_function.lambda.function_name
+    description = "The name of the lambda function"
+}
+
+output "lambda_policy" {
+    value = aws_iam_policy.policy_lambda
+    description = "Policy for lambda function"
+}
