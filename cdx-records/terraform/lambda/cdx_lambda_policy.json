@@ -1,0 +1,11 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+          "Action": "sqs:SendMessage",
+          "Effect": "Allow",
+          "Resource":"arn:aws:sqs:eu-west-2::${sqs_fetch_id}",
+          "Sid": "LambdaSendSQSMessage"
+        }
+      ]
+}

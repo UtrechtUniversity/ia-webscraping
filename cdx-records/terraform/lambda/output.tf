@@ -8,7 +8,7 @@ output "lambda_name" {
     description = "The name of the lambda function"
 }
 
-output "lambda_policy" {
-    value = aws_iam_policy.policy_lambda
-    description = "Policy for lambda function"
-}
+# output "lambda_policy" {
+#     value = aws_iam_policy.policy_lambda
+#     description = "Policy for lambda function"
+# }

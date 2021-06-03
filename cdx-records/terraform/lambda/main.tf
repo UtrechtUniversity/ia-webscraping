@@ -1,6 +1,15 @@
 data "aws_s3_bucket_object" "lambda_code" {
   bucket = var.bucket_name
-  key    = "cdx-records/${var.lambda_cdx}.zip"
+  key    = "cdx-records/${var.lambda_name}.zip"
+}
+
+# List specific lambda policy in this file
+data "template_file" "policy" {
+  template = "${file("${path.module}/cdx_lambda_policy.json")}"
+  
+vars = {
+    sqs_fetch_id = "${var.sqs_fetch_id}"
+  }
 }
 
 resource "aws_lambda_function" "lambda" {
@@ -25,58 +34,18 @@ resource "aws_lambda_function" "lambda" {
   }
 }
 
-resource "aws_iam_role" "iam_for_lambda" {
+resource "aws_iam_role" "iam_role_lambda" {
   name = var.lambda_name
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = file("${path.module}/trust_relationship.json")
 }
 
-resource "aws_iam_policy" "sqs_send_policy" {
-  name        = "sqs_send_policy"
-  path        = "/"
-  description = "SQS send policy example"
-
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression result to valid JSON syntax.
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "sqs:SendMessage",
-        ]
-        Effect   = "Allow"
-        Resource = var.sqs_fetch_arn
-      },
-    ]
-  })
+resource "aws_iam_policy" "policy_lambda" {
+  name = "policy_${var.lambda_name}"
+  policy = "${data.template_file.policy.rendered}"
 }
 
-
-
-resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  role       = aws_iam_role.iam_for_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
+  role   = aws_iam_role.iam_role_lambda.name
+  policy_arn = aws_iam_policy.policy_lambda.arn
 }
-
-resource "aws_iam_role_policy_attachment" "sqs_send" {
-  role       = aws_iam_role.iam_for_lambda.name
-  policy_arn = aws_iam_policy.sqs_send_policy.arn
-}
-
-
 

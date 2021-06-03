@@ -16,8 +16,8 @@ variable "bucket_name" {
      default = {}
  } 
 
-   variable "sqs_fetch_arn" {
-     description = "The ARN of the SQS queue which lists all fetch tasks"
+   variable "sqs_fetch_id" {
+     description = "The name of the SQS queue which lists all fetch tasks"
      type = string
      default = "my_queue"
  } 
