@@ -16,8 +16,14 @@ variable "bucket_name" {
      default = {}
  } 
 
-   variable "sqs_fetch_id" {
-     description = "The name of the SQS queue which lists all fetch tasks"
+ variable "policy_file" {
+     description = "name of file describing lambda policy"
      type = string
-     default = "my_queue"
+     default = "my_policy.json"
+ } 
+
+   variable "policy_vars" {
+     description = "variables in policy file for specific lambda"
+     type = map
+     default = {}
  } 

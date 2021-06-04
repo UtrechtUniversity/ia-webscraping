@@ -5,11 +5,9 @@ data "aws_s3_bucket_object" "lambda_code" {
 
 # List specific lambda policy in this file
 data "template_file" "policy" {
-  template = "${file("${path.module}/cdx_lambda_policy.json")}"
+  template = "${file("${path.module}/${var.policy_file}")}"
   
-vars = {
-    sqs_fetch_id = "${var.sqs_fetch_id}"
-  }
+  vars = var.policy_vars
 }
 
 resource "aws_lambda_function" "lambda" {

@@ -6,7 +6,11 @@ module "lambda_cdx" {
     source = "./lambda"
     lambda_name = "${var.lambda_name}-cdx" 
     bucket_name = "crunchbase-dev-mvos-source"
-    sqs_fetch_arn = module.sqs_fetch.sqs_arn
+    policy_file = "cdx_lambda_policy.json"
+
+    policy_vars = {
+      sqs_id = module.sqs_fetch.sqs_id
+      }
 
     env_vars = {
       sqs_cdx_id = module.sqs_cdx.sqs_id,
@@ -20,18 +24,36 @@ module "lambda_cdx" {
     }
 
 
+module "lambda_scrape" {
+    source = "./lambda"
+    policy_file = "scrape_lambda_policy.json"
+    lambda_name = "${var.lambda_name}-scrape"
+    bucket_name = "crunchbase-dev-mvos-source"
+
+policy_vars = {
+    sqs_id = module.sqs_fetch.sqs_id
+    }
+
+  env_vars = {
+      sqs_failures_id = module.scrape_failures.sqs_id,
+      sqs_failures_arn = module.scrape_failures.sqs_arn,
+      scraper_logging_level = var.scraper_logging_level
+    }
+  }
+
+
 #################################
 ###    SQS QUEUES    ###
 #################################
 
 module "sqs_cdx" {
   source   = "./sqs"
-  sqs_name = "${var.lambda_cdx}-cdx-queue"
+  sqs_name = "${var.lambda_name}-cdx-queue"
 }
 
 module "sqs_fetch" {
   source    = "./sqs"
-  sqs_name  = "${var.lambda_cdx}-fetch-queue"
+  sqs_name  = "${var.lambda_name}-fetch-queue"
   visibility_timeout_seconds = 120
   redrive_policy = jsonencode({
     deadLetterTargetArn = module.scrape_letters.sqs_arn
@@ -257,7 +279,7 @@ resource "aws_lambda_event_source_mapping" "trigger_scraper" {
 
 module "cloudwatch_trigger" {
     source = "./cloudwatch_trigger"
-    lambda_name = aws_lambda_function.test_lambda.function_name
-    lambda_arn = aws_lambda_function.test_lambda.arn
+    lambda_name = module.lambda_cdx.lambda_name
+    lambda_arn = module.lambda_cdx.lambda_arn
     trigger_rate = "3"
 }
