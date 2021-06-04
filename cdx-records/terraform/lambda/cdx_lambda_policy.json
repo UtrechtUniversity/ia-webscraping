@@ -4,7 +4,7 @@
         {
           "Action": "sqs:SendMessage",
           "Effect": "Allow",
-          "Resource":"arn:aws:sqs:eu-west-2::${sqs_fetch_id}",
+          "Resource":"arn:aws:sqs:eu-west-2::${sqs_id}",
           "Sid": "LambdaSendSQSMessage"
         }
       ]
