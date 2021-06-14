@@ -44,7 +44,7 @@ EXTENSIONS = [
 
 BLACKLIST = [re.compile(ext + r"(\/|\?|$)", re.IGNORECASE) for ext in EXTENSIONS]
 
-TARGET_BUCKET = os.environ.get("target_bucket_id", "test")
+TARGET_BUCKET = os.environ.get("target_bucket_id", None)
 CDX_METRICS_KEY = "crunchbase-cdx-metrics"
 
 # SQS_FETCH_LIMIT: max number of allowed messages in Fetch queue;
@@ -297,7 +297,7 @@ def handler(event, context):
     s3_bucket = TARGET_BUCKET
     s3_key = CDX_METRICS_KEY
     columns = ["run", "domain", "n_urls", "n_filtered_urls"]
-    cdx_metrics = metrics(s3_bucket=s3_bucket, s3_key=s3_key, columns=columns)
+    cdx_metrics = metrics(s3_bucket=s3_bucket, s3_key=s3_key, columns=columns, logger=logger)
 
     for i in range(CDX_LAMBDA_N_ITERATIONS):
         logger.info("CDX Lambda run '%d'", i + 1)
@@ -404,9 +404,11 @@ class metrics(object):
         """Write metrics to S3 as csv file
            Add headers if no object exists
         """
+        write_header = (not self.s3.exists(self.metrics_file))
         with self.s3.open(self.metrics_file, "a") as metrics_file:
             current_out_writer = csv.DictWriter(metrics_file, fieldnames=self.columns)
-            if self.s3.info(self.metrics_file)["Size"] == 0:
+            if write_header:
+                # Add header if file does not exists (i.e. new file).
                 current_out_writer.writeheader()
             for line in self.data:
                 current_out_writer.writerow(line)

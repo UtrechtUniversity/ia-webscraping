@@ -106,6 +106,41 @@ module "lambda_cdx" {
   }
 }
 
+resource "aws_iam_role_policy_attachment" "s3_metrics_file" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.s3_cdx_metrics.arn
+}
+
+data "aws_iam_policy_document" "s3_cdx_metrics_policy_doc" {
+  statement {
+    sid = "1"
+
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:PutObject"
+    ]
+
+    resources = [
+      "${var.bucket_name}/*",
+      "${var.bucket_name}"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "s3_cdx_metrics" {
+  name        = "s3_cdx_metrics_policy"
+  path        = "/"
+  description = "The policy for the cdx metrics s3 file."
+
+  policy = data.aws_iam_policy_document.s3_cdx_metrics_policy_doc.json
+}
+
+data "aws_s3_bucket_object" "lambda_code" {
+  bucket = var.bucket_name
+  key    = "cdx-records/${var.lambda_cdx}.zip"
+}
+
 module "lambda_scrape" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-scrape"
