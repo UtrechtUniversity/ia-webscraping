@@ -45,7 +45,7 @@ EXTENSIONS = [
 BLACKLIST = [re.compile(ext + r"(\/|\?|$)", re.IGNORECASE) for ext in EXTENSIONS]
 
 TARGET_BUCKET = os.environ.get("target_bucket_id", None)
-CDX_METRICS_KEY = "crunchbase-cdx-metrics"
+CDX_METRICS_KEY = os.environ.get("cdx_metrics_file", "crunchbase-cdx-metrics")
 
 # SQS_FETCH_LIMIT: max number of allowed messages in Fetch queue;
 # if reached, temporarily stop cdx lambda function
