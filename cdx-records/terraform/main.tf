@@ -22,7 +22,7 @@ module "lambda_cdx" {
     policy_file = "cdx_lambda_policy.json"
 
     policy_vars = {
-      sqs_id = module.sqs_fetch.sqs_id
+      sqs_arn = module.sqs_fetch.sqs_arn
       }
 
     env_vars = {
@@ -44,7 +44,7 @@ module "lambda_scrape" {
     policy_file = "scrape_lambda_policy.json"
 
   policy_vars = {
-    sqs_id = module.sqs_fetch.sqs_id
+    sqs_arn = module.sqs_fetch.sqs_arn
     }
 
   env_vars = {

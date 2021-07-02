@@ -8,7 +8,7 @@
             "sqs:GetQueueAttributes"
           ],
           "Effect": "Allow",
-          "Resource":"arn:aws:sqs:eu-west-2::${sqs_id}",
+          "Resource":"${sqs_arn}",
           "Sid": "LambdaHandleSQSMessages"
         },
         {
