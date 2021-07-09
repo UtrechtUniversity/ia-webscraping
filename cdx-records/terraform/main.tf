@@ -12,6 +12,70 @@ resource "aws_s3_bucket" "result_bucket" {
 }
 
 ################################
+### LAMBDA POLICIES ###
+################################
+
+# Generate policy document for cdx lambda
+data "aws_iam_policy_document" "cdx_policy" {
+  statement {
+    sid = "1"
+    actions = [
+      "sqs:DeleteMessage",
+      "sqs:SendMessage",
+      "sqs:GetQueueAttributes",
+    ]
+    resources = [
+      "${module.sqs_fetch.sqs_arn}",
+    ]
+  }
+} 
+
+resource "aws_iam_policy" "cdx" {
+  name   = "cdx_policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.cdx_policy.json
+}
+
+# Generate policy document for scrape lambda
+data "aws_iam_policy_document" "scrape_policy" {
+  statement {
+    sid = "1"
+    actions = [
+      "sqs:DeleteMessage",
+      "sqs:ReceiveMessage",
+      "sqs:GetQueueAttributes",
+    ]
+    resources = [
+      "${module.sqs_fetch.sqs_arn}",
+    ]
+  }
+  statement {
+    sid = "2"
+    actions = [
+      "sqs:SendMessage",
+    ]
+    resources = [
+      "${module.scrape_failures.sqs_arn}",
+    ]
+  }
+  statement {
+    sid = "3"
+    actions = [
+      "s3:PutObject",
+    ]
+    resources = [
+      "arn:aws:s3:::crunchbase-scraping-results-csk",
+    ]
+  }
+} 
+
+resource "aws_iam_policy" "scrape" {
+  name   = "scrape_policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.scrape_policy.json
+}
+
+################################
 ### LAMBDA FUNCTIONS ###
 ################################
 
@@ -19,12 +83,7 @@ module "lambda_cdx" {
     source = "./lambda"
     lambda_name = "${var.lambda_name}-cdx" 
     bucket_name = "crunchbase-dev-mvos-source"
-    policy_file = "cdx_lambda_policy.json"
-
-    policy_vars = {
-      sqs_arn = module.sqs_fetch.sqs_arn
-      }
-
+  
     env_vars = {
       sqs_cdx_id = module.sqs_cdx.sqs_id,
       sqs_cdx_arn = module.sqs_cdx.sqs_arn,
@@ -36,18 +95,12 @@ module "lambda_cdx" {
         }
     }
 
-
 module "lambda_scrape" {
     source = "./lambda"
     lambda_name = "${var.lambda_name}-scrape"
     bucket_name = "crunchbase-dev-mvos-source"
-    policy_file = "scrape_lambda_policy.json"
-
-  policy_vars = {
-    sqs_arn = module.sqs_fetch.sqs_arn
-    }
-
-  env_vars = {
+    
+    env_vars = {
       sqs_fetch_id = module.sqs_fetch.sqs_id,
       sqs_fetch_arn = module.sqs_fetch.sqs_arn,
       target_bucket_id = aws_s3_bucket.result_bucket.id,
@@ -58,7 +111,6 @@ module "lambda_scrape" {
       scraper_logging_level = var.scraper_logging_level
     }
   }
-
 
 #################################
 ###    SQS QUEUES    ###

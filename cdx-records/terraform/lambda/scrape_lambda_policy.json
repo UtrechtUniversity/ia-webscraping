@@ -20,7 +20,7 @@
         {
           "Action" : ["sqs:SendMessage"],
           "Effect"  : "Allow",
-          "Resource" : "arn:aws:sqs:eu-west-2::scrape_failures"
+          "Resource" : "arn:aws:sqs:::scrape_failures"
         },
         {
           "Action": [
