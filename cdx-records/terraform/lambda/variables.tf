@@ -1,4 +1,4 @@
-variable "lambda_name" {
+variable "lambda_function" {
      description = "name of the lambda function"
      type = string
      default = "my_lambda"
@@ -10,20 +10,16 @@ variable "bucket_name" {
      default = "s3-crunch-mvos"
  } 
 
-  variable "env_vars" {
+variable "env_vars" {
      description = "environment variables that lambda has access to"
      type = map
      default = {}
  } 
 
- variable "policy_file" {
-     description = "name of file describing lambda policy"
-     type = string
-     default = "my_policy.json"
- } 
-
-   variable "policy_vars" {
-     description = "variables in policy file for specific lambda"
-     type = map
-     default = {}
- } 
+variable "policy" {
+  description = "An additional policy to attach to the Lambda function role"
+  type = object({
+    json = string
+  })
+  default = null
+}

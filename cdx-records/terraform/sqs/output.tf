@@ -7,3 +7,4 @@ output "sqs_arn" {
     value = aws_sqs_queue.sqs_queue.arn
     description = "The ARN of the sqs queue, to be used in main"
 }
+
