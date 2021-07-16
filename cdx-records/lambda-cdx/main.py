@@ -54,8 +54,14 @@ sqs = boto3.resource('sqs')
 fetch_sqs_queue = sqs.Queue(os.environ.get('sqs_fetch_id','https://sqs.eu-central-1.amazonaws.com/080708105962/terraform-example-queue-rjbood'))
 cdx_sqs_queue = sqs.Queue(os.environ.get('sqs_cdx_id','https://sqs.eu-central-1.amazonaws.com/080708105962/terraform_test_out'))
 
-
 def fetch_queue_limit_reached():
+
+    print(f"Running session with aws access key ID: {os.environ['AWS_ACCESS_KEY_ID']}")
+    
+    print(fetch_sqs_queue.attributes)
+    print(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessages'))
+    print(SQS_FETCH_LIMIT)
+    print(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessagesDelayed'))
     # Total number of messages in fetch queue = visible message + delayed messages
     return int(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessages')) + int(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessagesDelayed')) > SQS_FETCH_LIMIT
 

@@ -27,6 +27,15 @@ data "aws_iam_policy_document" "cdx_policy" {
       "${module.sqs_fetch.sqs_arn}",
     ]
   }
+  statement {
+    sid = "2"
+    actions = [
+      "sqs:ListQueues",
+    ]
+    resources = [
+      "*",
+    ]
+  }
 } 
 
 # Generate policy document for scrape lambda
@@ -54,6 +63,15 @@ data "aws_iam_policy_document" "scrape_policy" {
   statement {
     sid = "3"
     actions = [
+      "sqs:ListQueues",
+    ]
+    resources = [
+      "*",
+    ]
+  }
+  statement {
+    sid = "4"
+    actions = [
       "s3:PutObject",
     ]
     resources = [
@@ -61,7 +79,6 @@ data "aws_iam_policy_document" "scrape_policy" {
     ]
   }
 } 
-
 
 ################################
 ### LAMBDA FUNCTIONS ###
