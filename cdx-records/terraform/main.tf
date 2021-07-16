@@ -8,7 +8,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = var.lambda_cdx
+  name = "${var.lambda_name}-cdx"
 
   assume_role_policy = <<EOF
 {
@@ -55,7 +55,7 @@ resource "aws_iam_policy" "sqs_send_policy" {
 
 data "aws_s3_bucket_object" "lambda_code" {
   bucket = var.bucket_name
-  key    = "cdx-records/${var.lambda_cdx}.zip"
+  key    = "cdx-records/${var.lambda_name}-cdx.zip"
 }
 
 
@@ -65,12 +65,12 @@ data "aws_s3_bucket_object" "lambda_code" {
 
 module "sqs_cdx" {
   source   = "./sqs"
-  sqs_name = "${var.lambda_cdx}-cdx-queue"
+  sqs_name = "${var.lambda_name}-cdx-queue"
 }
 
 module "sqs_fetch" {
   source    = "./sqs"
-  sqs_name  = "${var.lambda_cdx}-fetch-queue"
+  sqs_name  = "${var.lambda_name}-fetch-queue"
   visibility_timeout_seconds = 120
   redrive_policy = jsonencode({
     deadLetterTargetArn = module.scrape_letters.sqs_arn
@@ -94,7 +94,7 @@ module "scrape_failures" {
 
 
 resource "aws_lambda_function" "test_lambda" {
-  function_name = var.lambda_cdx
+  function_name = var.lambda_name
   description = "terraform lambda cdx"
   role          = aws_iam_role.iam_for_lambda.arn
 
@@ -104,8 +104,8 @@ resource "aws_lambda_function" "test_lambda" {
   handler       = "main.handler"
 
   # Check hash code for code changes
-  source_code_hash = chomp(file("../${var.lambda_cdx}.zip.sha256"))
-
+  source_code_hash = chomp(file("../${var.lambda_name}-cdx.zip.sha256"))
+  
   runtime = "python3.8"
   timeout = 120
   memory_size = "128"
@@ -278,7 +278,7 @@ resource "aws_iam_role_policy_attachment" "lambda_policies_iv" {
 
 data "aws_s3_bucket_object" "lambda_scraper" {
   bucket = "crunchbase-dev-mvos-source"
-  key    = "cdx-records/lambda-scraper-dev-csk.zip"
+  key    = "cdx-records/lambda-scrape.zip"
 }
 
 # LAMBDA FUNCTION
@@ -292,7 +292,7 @@ resource "aws_lambda_function" "scraper" {
 
   handler="main.lambda_handler"
   # Check hash code for code changes
-  source_code_hash = chomp(file("../lambda-scraper-dev-csk.zip.sha256"))
+  source_code_hash = chomp(file("../${var.lambda_name}-scrape.zip.sha256"))
   
   runtime = "python3.8"
   timeout= 120
