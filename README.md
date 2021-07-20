@@ -72,7 +72,7 @@ Deploying this solution will result in the following scrape pipeline in the AWS 
   - [Update Terraform](#update-terraform)
 
 ### Prerequisites
-To install and run this project you need to have the following prerequisites installed:
+To run this project you need to take the following steps:
 - (optional) install package manager. 
 	- windows: [chocolatey](https://chocolatey.org/install), 
 	- mac: [brew](https://brew.sh)
@@ -81,8 +81,7 @@ To install and run this project you need to have the following prerequisites ins
 - [install aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 - [configure aws cli credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
     create a profile with the name 'crunch' 
-- install python3 
-- install pip3
+- install python3 , pip3 , pandas, boto3
 - install [terraform](https://www.terraform.io/downloads.html)
 - create a personal S3 bucket in AWS (region: eu-central-1)
 
@@ -173,7 +172,7 @@ $ cd ..
 $ python fill_sqs_queue.py [ARGUMENTS]
 
 Arguments:
-  -f  path to thefile containing urls 
+  -f  path to the file containing urls 
   -q  SQS ID: human readable name of sqs cdx queue (check the terraform output)
 
 ```
