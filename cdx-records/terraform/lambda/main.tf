@@ -5,8 +5,8 @@ data "aws_s3_bucket_object" "lambda_code" {
 
 data "aws_iam_policy_document" "basic" {
   statement {
-    actions    = ["sts:AssumeRole"]
-    effect     = "Allow"
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
     principals {
       type        = "Service"
       identifiers = ["lambda.amazonaws.com"]
@@ -16,15 +16,15 @@ data "aws_iam_policy_document" "basic" {
 
 
 resource "aws_iam_role" "iam_role_lambda" {
-  name = var.lambda_function
-  assume_role_policy = "${data.aws_iam_policy_document.basic.json}"
+  name               = var.lambda_function
+  assume_role_policy = data.aws_iam_policy_document.basic.json
 }
 
 # Make sure lambda is allowed basic execution
 resource "aws_iam_role_policy_attachment" "basic" {
-  role   = aws_iam_role.iam_role_lambda.name
+  role       = aws_iam_role.iam_role_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}  
+}
 
 resource "aws_iam_policy" "additional" {
   name   = var.lambda_function
@@ -38,19 +38,19 @@ resource "aws_iam_role_policy_attachment" "additional" {
 
 resource "aws_lambda_function" "lambda" {
   function_name = var.lambda_function
-  description = "aws lambda function"
-  role          = "${aws_iam_role.iam_role_lambda.arn}"
+  description   = "aws lambda function"
+  role          = aws_iam_role.iam_role_lambda.arn
 
-  s3_bucket = "${data.aws_s3_bucket_object.lambda_code.bucket}"
-  s3_key = "${data.aws_s3_bucket_object.lambda_code.key}"
+  s3_bucket = data.aws_s3_bucket_object.lambda_code.bucket
+  s3_key    = data.aws_s3_bucket_object.lambda_code.key
 
-  handler       = "main.handler"
+  handler = "main.handler"
 
   # Check hash code for code changes
   source_code_hash = chomp(file("../${var.lambda_function}.zip.sha256"))
 
-  runtime = "python3.8"
-  timeout = 120
+  runtime     = "python3.8"
+  timeout     = 120
   memory_size = "128"
 
   environment {
