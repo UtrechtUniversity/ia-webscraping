@@ -11,6 +11,7 @@ It is developed for the Crunchbase project to assess the sustainability of Europ
   - [About the Project](#about-the-project)
     - [Built with](#built-with)
     - [License](#license)
+    - [Architecture](#architecture)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -63,7 +64,6 @@ Deploying this solution will result in the following scrape pipeline in the AWS 
 
 ![Alt text](docs/architecture_overview.png?raw=true "Architecture Overview")
 
-
 ## Getting started
 
   - [Prerequisites](#prerequisites)
@@ -112,7 +112,9 @@ $ ./build.sh
 In the [terraform folder](/terraform) create a file ```terraform.tfvars``` that lists terraform variables and the corresponding values:
 
 ```
-bucket_name = [YOUR_BUCKET_NAME]
+code_bucket = [YOUR_BUCKET_NAME]
+
+result_bucket = [YOUR_BUCKET_NAME]
 
 lambda_name = [YOUR_LAMBDA_NAME]
 
@@ -184,7 +186,9 @@ The content of the test event is not used by the python code.
 Run you're newly created test event and check the Lambda logs to see the result.	
 
 ### Monitor Process
-Monitor process in AWS console	
+Each AWS service in the workflow can be monitored in the AWS console. 	
+The cloudwatch logs provide additional information on the lambda functions.
+Set the logging level to 'info' to get verbose information on the progress.	
 	
 The 'get_cdx_scrape_logs.py' script can be used to query the cloudwatch logs, to retrieve the metrics of the CDX Lambda funtion.
 The output of this script is a csv file containing: domain, run id, number of urls fetched from internet archive, number of filtered urls.
@@ -192,7 +196,7 @@ Because there is a maximum on the number of results that cloudwatch can return (
 The date is hardcoded and should be updated before running the script. The output filename contains the date for which the results were collected.
 
 ### Collect Results
-Results are collected in s3 bucket
+Scraping results are collected in your s3 bucket
 
 ### Clean up
 Run the following [command](https://www.terraform.io/docs/commands/destroy.html), to cleanup the AWS resources that were deployed by terraform:
