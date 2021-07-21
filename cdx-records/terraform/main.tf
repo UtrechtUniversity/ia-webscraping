@@ -1,5 +1,3 @@
-
-
 # Create bucket
 resource "aws_s3_bucket" "result_bucket" {
   bucket = var.result_bucket # bucket name
@@ -122,7 +120,6 @@ module "lambda_scrape" {
     sqs_failures_arn           = module.scrape_failures.sqs_arn,
     scraper_logging_level      = var.scraper_logging_level
   }
-}
 
 #################################
 ###    SQS QUEUES    ###

@@ -2,8 +2,6 @@
 # Values are assigned in the terraform.tfvars file
 
 
-# CDX LAMBDA: settings
-
 variable "lambda_name" {
   description = "name of the lambda function that collects CDX records from the Internet Archive"
   type        = string
