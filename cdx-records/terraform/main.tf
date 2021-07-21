@@ -96,6 +96,8 @@ module "lambda_cdx" {
   env_vars = {
     sqs_cdx_id                 = module.sqs_cdx.sqs_id,
     sqs_cdx_arn                = module.sqs_cdx.sqs_arn,
+    sqs_fetch_id               = module.sqs_fetch.sqs_id,
+    sqs_fetch_arn              = module.sqs_fetch.sqs_arn,
     sqs_message_delay_increase = var.sqs_message_delay_increase,
     sqs_cdx_max_messages       = var.sqs_cdx_max_messages,
     cdx_lambda_n_iterations    = var.cdx_lambda_n_iterations,
