@@ -4,7 +4,7 @@ variable "lambda_function" {
   default     = "my_lambda"
 }
 
-variable "bucket_name" {
+variable "code_bucket" {
   description = "name of the s3 bucket where lambda zip and tfstate are stored"
   type        = string
   default     = "s3-crunch-mvos"

@@ -7,13 +7,19 @@
 variable "lambda_name" {
   description = "name of the lambda function that collects CDX records from the Internet Archive"
   type        = string
-  default     = "lambda-cdx-crunchbase-dev-mvos"
+  default     = "my_lambda"
 }
 
-variable "bucket_name" {
+variable "result_bucket" {
+  description = "name of the s3 bucket where scraping results stored"
+  type        = string
+  default = "my_result_bucket"
+}
+
+variable "code_bucket" {
   description = "name of the s3 bucket where lambda zip and tfstate are stored"
   type        = string
-  default     = "crunchbase-dev-mvos-source"
+  default     = "my_code_bucket"
 }
 
 variable "cdx_logging_level" {

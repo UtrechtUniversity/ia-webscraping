@@ -2,7 +2,7 @@
 
 # Create bucket
 resource "aws_s3_bucket" "result_bucket" {
-  bucket = "crunchbase-scraping-results-csk" # bucket name
+  bucket = var.result_bucket 
   acl    = "private"
 
   tags = {
@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "scrape_policy" {
       "s3:PutObject",
     ]
     resources = [
-      "arn:aws:s3:::crunchbase-scraping-results-csk",
+      "arn:aws:s3:::${var.result_bucket}",
     ]
   }
 }
@@ -87,7 +87,7 @@ data "aws_iam_policy_document" "scrape_policy" {
 module "lambda_cdx" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-cdx"
-  bucket_name     = "crunchbase-dev-mvos-source"
+  code_bucket     = var.code_bucket
 
   policy = {
     json = data.aws_iam_policy_document.cdx_policy.json
@@ -109,7 +109,7 @@ module "lambda_cdx" {
 module "lambda_scrape" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-scrape"
-  bucket_name     = "crunchbase-dev-mvos-source"
+  code_bucket     = var.code_bucket
 
   policy = {
     json = data.aws_iam_policy_document.scrape_policy.json

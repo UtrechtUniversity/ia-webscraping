@@ -1,5 +1,5 @@
 data "aws_s3_bucket_object" "lambda_code" {
-  bucket = var.bucket_name
+  bucket = var.code_bucket
   key    = "cdx-records/${var.lambda_function}.zip"
 }
 
