@@ -2,7 +2,7 @@
 
 # Create bucket
 resource "aws_s3_bucket" "result_bucket" {
-  bucket = var.result_bucket 
+  bucket = "crunchbase-scraping-results-csk" # bucket name
   acl    = "private"
 
   tags = {
@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "scrape_policy" {
       "s3:PutObject",
     ]
     resources = [
-      "arn:aws:s3:::${var.result_bucket}",
+      "${aws_s3_bucket.result_bucket.arn}/*",
     ]
   }
 }
@@ -87,7 +87,7 @@ data "aws_iam_policy_document" "scrape_policy" {
 module "lambda_cdx" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-cdx"
-  code_bucket     = var.code_bucket
+  code_bucket     = "crunchbase-dev-mvos-source"
 
   policy = {
     json = data.aws_iam_policy_document.cdx_policy.json
@@ -96,31 +96,28 @@ module "lambda_cdx" {
   env_vars = {
     sqs_cdx_id                 = module.sqs_cdx.sqs_id,
     sqs_cdx_arn                = module.sqs_cdx.sqs_arn,
+    sqs_cdx_max_messages       = var.sqs_cdx_max_messages,
     sqs_fetch_id               = module.sqs_fetch.sqs_id,
     sqs_fetch_arn              = module.sqs_fetch.sqs_arn,
+    sqs_fetch_limit            = var.sqs_fetch_limit,
     sqs_message_delay_increase = var.sqs_message_delay_increase,
-    sqs_cdx_max_messages       = var.sqs_cdx_max_messages,
     cdx_lambda_n_iterations    = var.cdx_lambda_n_iterations,
     cdx_logging_level          = var.cdx_logging_level,
     cdx_run_id                 = var.cdx_run_id
+    target_bucket_id           = aws_s3_bucket.result_bucket.id
   }
 }
 
 module "lambda_scrape" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-scrape"
-  code_bucket     = var.code_bucket
+  code_bucket     = "crunchbase-dev-mvos-source"
 
   policy = {
     json = data.aws_iam_policy_document.scrape_policy.json
   }
 
   env_vars = {
-    sqs_fetch_id               = module.sqs_fetch.sqs_id,
-    sqs_fetch_arn              = module.sqs_fetch.sqs_arn,
-    target_bucket_id           = aws_s3_bucket.result_bucket.id,
-    sqs_fetch_limit            = var.sqs_fetch_limit,
-    sqs_message_delay_increase = var.sqs_message_delay_increase,
     sqs_failures_id            = module.scrape_failures.sqs_id,
     sqs_failures_arn           = module.scrape_failures.sqs_arn,
     scraper_logging_level      = var.scraper_logging_level
