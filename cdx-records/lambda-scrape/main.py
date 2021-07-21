@@ -128,7 +128,7 @@ async def fetch_all(records):
         _ = await asyncio.gather(*tasks) 
 
 
-def lambda_handler(event, context):
+def handler(event, context):
     logger.info(f'scraper lambda received {len(event["Records"])} messages')
     loop = asyncio.get_event_loop() 
     future = asyncio.ensure_future(fetch_all(event['Records'])) 
@@ -156,4 +156,4 @@ if __name__ == '__main__':
         ]
     }
 
-    lambda_handler(workload, None)
+    handler(workload, None)
