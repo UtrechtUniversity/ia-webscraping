@@ -2,7 +2,7 @@
 
 # Create bucket
 resource "aws_s3_bucket" "result_bucket" {
-  bucket = "crunchbase-scraping-results-csk" # bucket name
+  bucket = var.result_bucket # bucket name
   acl    = "private"
 
   tags = {

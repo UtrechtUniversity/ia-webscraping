@@ -10,11 +10,11 @@ variable "lambda_name" {
   default     = "my_lambda"
 }
 
-# variable "result_bucket" {
-#   description = "name of the s3 bucket where scraping results stored"
-#   type        = string
-#   default = "my_result_bucket"
-# }
+variable "result_bucket" {
+  description = "name of the s3 bucket where scraping results stored"
+  type        = string
+  default = "my_result_bucket"
+}
 
 variable "code_bucket" {
   description = "name of the s3 bucket where lambda zip and tfstate are stored"
