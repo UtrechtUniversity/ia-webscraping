@@ -1,0 +1,42 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+          "Action": [
+            "sqs:DeleteMessage",
+            "sqs:ReceiveMessage",
+            "sqs:GetQueueAttributes"
+          ],
+          "Effect": "Allow",
+          "Resource":"${sqs_arn}",
+          "Sid": "LambdaHandleSQSMessages"
+        },
+        {
+          "Action": ["sqs:ListQueues"],
+          "Effect": "Allow",          
+          "Resource": "*",
+          "Sid": "ListQueues"
+        },
+        {
+          "Action" : ["sqs:SendMessage"],
+          "Effect"  : "Allow",
+          "Resource" : "arn:aws:sqs:::scrape_failures"
+        },
+        {
+          "Action": [
+              "logs:CreateLogStream",
+              "logs:CreateLogGroup",
+              "logs:PutLogEvents"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:logs:*:*:*",
+          "Sid": "LambdaCreateLogs"
+        },
+        {
+          "Action": ["s3:PutObject"],
+          "Effect": "Allow",
+          "Resource": "arn:aws:s3:::crunchbase-scraping-results-csk",
+          "Sid": "LambdaWriteToBucket"
+        }
+      ]
+    }

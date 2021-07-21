@@ -1,0 +1,26 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+          "Action": [
+            "sqs:DeleteMessage",
+            "sqs:SendMessage",
+            "sqs:GetQueueAttributes"
+          ],
+          "Effect": "Allow",
+          "Resource":"&{sqs_arn}",
+          "Sid": "LambdaSendSQSMessage"
+        },
+        {
+          "Action": [
+              "logs:CreateLogStream",
+              "logs:CreateLogGroup",
+              "logs:PutLogEvents"
+          ],
+          "Effect": "Allow",
+          "Resource": "arn:aws:logs:*:*:*",
+          "Sid": "LambdaCreateLogs"
+        }  
+
+      ]
+}

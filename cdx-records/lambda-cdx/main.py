@@ -54,9 +54,9 @@ sqs = boto3.resource('sqs')
 fetch_sqs_queue = sqs.Queue(os.environ.get('sqs_fetch_id','https://sqs.eu-central-1.amazonaws.com/080708105962/terraform-example-queue-rjbood'))
 cdx_sqs_queue = sqs.Queue(os.environ.get('sqs_cdx_id','https://sqs.eu-central-1.amazonaws.com/080708105962/terraform_test_out'))
 
-
 def fetch_queue_limit_reached():
-    # Total number of messages in fetch queue = visible message + delayed messages
+
+   # Total number of messages in fetch queue = visible message + delayed messages
     return int(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessages')) + int(fetch_sqs_queue.attributes.get('ApproximateNumberOfMessagesDelayed')) > SQS_FETCH_LIMIT
 
 def get_cdx_sqs_messages():

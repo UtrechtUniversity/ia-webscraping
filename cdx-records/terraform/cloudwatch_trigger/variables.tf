@@ -1,12 +1,12 @@
 variable "trigger_rate" {
-    type = string
-    default = "5"
+  type    = string
+  default = "5"
 }
 
 variable "lambda_name" {
-    type = string
+  type = string
 }
 
 variable "lambda_arn" {
-    type = string
+  type = string
 }
