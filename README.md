@@ -109,8 +109,8 @@ $ ./build.sh
 
 ### Update Terraform
 
-In the [terraform folder](/terraform) create a file ```terraform.tfvars``` that lists the below terraform variables and the corresponding values.
-See [variables file](/terraform/variables.tf) for more information on the variables.
+In the [terraform folder](/cdx-records/terraform) create a file ```terraform.tfvars``` that lists the below terraform variables and the corresponding values.
+See [variables file](/cdx-records/terraform/variables.tf) for more information on the variables.
 
 ```
 code_bucket = [YOUR_BUCKET_NAME]
