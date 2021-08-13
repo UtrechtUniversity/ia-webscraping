@@ -109,7 +109,8 @@ $ ./build.sh
 
 ### Update Terraform
 
-In the [terraform folder](/terraform) create a file ```terraform.tfvars``` that lists terraform variables and the corresponding values:
+In the [terraform folder](/terraform) create a file ```terraform.tfvars``` that lists the below terraform variables and the corresponding values.
+See [variables file](/terraform/variables.tf) for more information on the variables.
 
 ```
 code_bucket = [YOUR_BUCKET_NAME]
@@ -117,6 +118,22 @@ code_bucket = [YOUR_BUCKET_NAME]
 result_bucket = [YOUR_BUCKET_NAME]
 
 lambda_name = [YOUR_LAMBDA_NAME]
+
+------- Optional: when not specified the default applies -----------
+
+cdx_logging_level = [CDX_DEBUG_LEVEL; DEFAULT=error]
+
+scraper_logging_level = [SCRAPER_DEBUG_LEVEL; DEFAULT=error]
+
+sqs_fetch_limit = [MAX_MESSAGES_FETCH_QUEUE; DEFAULT=1000]
+
+sqs_message_delay_increase = [DELAY_INCREASE; DEFAULT=10 sec]
+
+sqs_cdx_max_messages = [MAX_CDX_MESSAGES_RECEIVED_PER_ITERATION; DEFAULT=10]
+
+cdx_lambda_n_iterations = [NUMBER_ITERATIONS_CDX_FUNCTION=2]
+
+cdx_run_id = [CDX_RUN_METRICS_IDENTIFIER; DEFAULT=1]
 
 ```
 This file is automatically loaded by terraform and the values are assigned values to the variables in ```main.tf``` and ```provider.tf``` 
