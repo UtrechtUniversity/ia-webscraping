@@ -3,6 +3,7 @@
 This repository provides code to set up an AWS workflow for collecting and analyzing webpages from the Internet Archive.
 It is developed for the Crunchbase project to assess the sustainability of European startup-companies by analyzing their websites. 
 
+This software is designed for users with prior knowledge of python, aws and infrastructure.
 
 ## Table of Contents
 
