@@ -34,6 +34,7 @@ It is developed for the Crunchbase project to assess the sustainability of Europ
 
 - Casper Kaandorp (c.s.kaandorp@uu.nl)
 - Martine de Vos (m.g.devos@uu.nl)
+- Robert Jan Bood (robert-jan.bood@surf.nl)
 
 This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/) 
 
