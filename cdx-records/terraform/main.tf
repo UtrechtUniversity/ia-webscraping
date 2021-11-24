@@ -107,7 +107,7 @@ module "lambda_cdx" {
 }
 
 resource "aws_iam_role_policy_attachment" "s3_metrics_file" {
-  role       = aws_iam_role.iam_for_lambda.name
+  role       = module.lambda_cdx.name
   policy_arn = aws_iam_policy.s3_cdx_metrics.arn
 }
 
@@ -136,10 +136,10 @@ resource "aws_iam_policy" "s3_cdx_metrics" {
   policy = data.aws_iam_policy_document.s3_cdx_metrics_policy_doc.json
 }
 
-data "aws_s3_bucket_object" "lambda_code" {
-  bucket = var.bucket_name
-  key    = "cdx-records/${var.lambda_cdx}.zip"
-}
+// data "aws_s3_bucket_object" "lambda_code" {
+//   bucket = var.bucket_name
+//   key    = "cdx-records/${var.lambda_cdx}.zip"
+// }
 
 module "lambda_scrape" {
   source          = "./lambda"
