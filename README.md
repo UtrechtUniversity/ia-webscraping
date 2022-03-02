@@ -86,9 +86,14 @@ To run this project you need to take the following steps:
 - install python3 , pip3 , pandas, boto3
 - install [terraform](https://www.terraform.io/downloads.html)
 - create a personal S3 bucket in AWS (region: eu-central-1)
+- if you are going to use an IAM account for the pipeline, make sure it has the proper permissions to create buckets, queues and policies. A very crude set of permissions would be: AmazonSQSFullAccess, AmazonS3FullAccess, IAMFullAccess, CloudWatchEventsFullAccess and AWSLambda_FullAccess.
 
 ### Installation
-Create your own copy of the 'cdx-records' directory on your local client.
+Create your own copy of the 'cdx-records' directory on your local client and change your working folder to it.
+```
+# Go to terraform folder
+$ cd cdx-records
+```
 
 ### Build lambda functions
 The 'build.sh' script will for each of the lambda functions:
@@ -98,51 +103,53 @@ The 'build.sh' script will for each of the lambda functions:
 - upload the zip file to the s3 bucket
 
 First update the build script
-- line 16: provide your AWS bucket name (see [Prerequisites](#prerequisites))
+- lines 26 and 27: substitute `crunchbase-dev-mvos-source` for your own AWS bucket name (see [Prerequisites](#prerequisites)). The name of the zip files containing the lambda code matters! In 'build.sh' 2 zip files, 'lambda-cdx.zip' and 'lambda-scrape.zip', are created. You need the prefix 'lambda' in the [Update Terraform](#update_terraform) step as the [YOUR_LAMBDA_NAME].
 
 Then run the build script
 ```
-# Go to terraform folder
-$ cd cdx-records
-
 # Build zip files
 $ ./build.sh 
 ```
 
+You might run into some errors, but usually these errors are automatically fixed.
+
 ### Update Terraform
 
-In the [terraform folder](/cdx-records/terraform) create a file ```terraform.tfvars``` that lists the below terraform variables and the corresponding values.
-See [variables file](/cdx-records/terraform/variables.tf) for more information on the variables.
+In the [terraform folder](/cdx-records/terraform) create a file ```terraform.tfvars``` that lists the terraform variables with their corresponding values.
+See [variables file](/cdx-records/terraform/variables.tf) for more information on the variables. The file should have the following format:
 
 ```
-code_bucket = [YOUR_BUCKET_NAME]
+code_bucket = "[CODE_BUCKET_NAME]" # must be a string, subsitute the [CODE_BUCKET_NAME]-part
 
-result_bucket = [YOUR_BUCKET_NAME]
+result_bucket = "[RESULT_BUCKET_NAME]" # can't be the same as [CODE_BUCKET_NAME]
 
-lambda_name = [YOUR_LAMBDA_NAME]
+lambda_name = "[YOUR_LAMBDA_NAME]" # must match the prefix of the lambda-zip files 
 
-------- Optional: when not specified the default applies -----------
+# ------- Optional: when not specified the default applies, 
+# uncomment if you would like to use these parameters -----------
 
-cdx_logging_level = [CDX_DEBUG_LEVEL; DEFAULT=error]
+# cdx_logging_level = [CDX_DEBUG_LEVEL; DEFAULT=error]
 
-scraper_logging_level = [SCRAPER_DEBUG_LEVEL; DEFAULT=error]
+# scraper_logging_level = [SCRAPER_DEBUG_LEVEL; DEFAULT=error]
 
-sqs_fetch_limit = [MAX_MESSAGES_FETCH_QUEUE; DEFAULT=1000]
+# sqs_fetch_limit = [MAX_MESSAGES_FETCH_QUEUE; DEFAULT=1000]
 
-sqs_message_delay_increase = [DELAY_INCREASE; DEFAULT=10 sec]
+# sqs_message_delay_increase = [DELAY_INCREASE; DEFAULT=10 sec]
 
-sqs_cdx_max_messages = [MAX_CDX_MESSAGES_RECEIVED_PER_ITERATION; DEFAULT=10]
+# sqs_cdx_max_messages = [MAX_CDX_MESSAGES_RECEIVED_PER_ITERATION; DEFAULT=10]
 
-cdx_lambda_n_iterations = [NUMBER_ITERATIONS_CDX_FUNCTION=2]
+# cdx_lambda_n_iterations = [NUMBER_ITERATIONS_CDX_FUNCTION=2]
 
-cdx_run_id = [CDX_RUN_METRICS_IDENTIFIER; DEFAULT=1]
+# cdx_run_id = [CDX_RUN_METRICS_IDENTIFIER; DEFAULT=1]
 
 ```
+Keep the square brackets intact. Substitute `[YOUR_BUCKET_NAME]` with the name of the bucket you have created. The value for `[RESULT_BUCKET_NAME]` is yours to choose. In this example workflow, the value for [YOUR_LAMBDA_NAME] must be identical to the prefix of the zip discussed earlier.
+
 This file is automatically loaded by terraform and the values are assigned values to the variables in ```main.tf``` and ```provider.tf``` 
 
 NB: The file ```backend.tf``` should be modified directly in the code :
 - line 5: provide your AWS bucket name (see [Prerequisites](#prerequisites))
-- line 10: change the key with a key of your own, e.g. 'terraform/state/<your-lambda function>/terraform.tfstate' 
+- line 10: change the key with a key of your own, e.g. 'terraform/state/[your-lambda function]/terraform.tfstate' 
 
 ## Usage
 - [Deploy AWS resources](#deploy-aws-resources)	
@@ -155,7 +162,7 @@ NB: The file ```backend.tf``` should be modified directly in the code :
 ### Deploy AWS resources
 
 #### init
-The terraform init command is used to initialize a working directory containing Terraform configuration files. This is the first command that should be run after writing a new Terraform configuration or cloning an existing one from version control. It is safe to run this command multiple times.
+The terraform init command is used to initialize a working directory containing Terraform configuration files. This is the first command that should be executed after writing a new Terraform configuration or cloning an existing one from version control. It is safe to run this command multiple times.
 ```
 # Go to terraform folder
 $ cd terraform
