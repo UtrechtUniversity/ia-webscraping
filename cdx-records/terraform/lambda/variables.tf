@@ -7,7 +7,7 @@ variable "lambda_function" {
 variable "code_bucket" {
   description = "name of the s3 bucket where lambda zip and tfstate are stored"
   type        = string
-  default     = "s3-crunch-mvos"
+  default     = "iascraping"
 }
 
 variable "env_vars" {

@@ -11,6 +11,7 @@ import boto3
 
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
+from pathlib import Path
 
 # create a global sqs client
 SQS_CLIENT = boto3.client('sqs')
@@ -81,10 +82,17 @@ async def fetch(record, session):
         r = await response.read()
         if response.status == 200:
             try:
+                # create s3 object
+                s3 = boto3.resource('s3')
+
                 # resp.content is a byte array, convert to string
-                contents = r.decode("utf-8", "ignore")
+                raw_contents = r.decode("utf-8", "ignore")
+                # write raw contents to bucket
+                raw_file_name = Path(file_name).stem + '__raw.html'
+                s3.Object(bucket_name, raw_file_name).put(Body=raw_contents)
+
                 # strip style, script, svg
-                contents = clean_html(contents)
+                contents = clean_html(raw_contents)
                 # parse
                 soup = BeautifulSoup(contents, 'html.parser')
                 # locate the body
@@ -97,7 +105,6 @@ async def fetch(record, session):
                     text = clean_text(strings)
 
                     if text != '':
-                        s3 = boto3.resource('s3')
                         s3.Object(bucket_name, file_name).put(Body=text)
 
                 else:

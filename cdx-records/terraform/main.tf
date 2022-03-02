@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "cdx_policy" {
       "sqs:GetQueueAttributes",
     ]
     resources = [
-      "${module.sqs_fetch.sqs_arn}",
+      module.sqs_fetch.sqs_arn,
     ]
   }
   statement {
@@ -33,8 +33,29 @@ data "aws_iam_policy_document" "cdx_policy" {
     resources = [
       "*",
     ]
+  }  
+  statement {
+    sid = "3"
+
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:PutObject"
+    ]
+
+    resources = [
+      "${aws_s3_bucket.result_bucket.arn}/*",
+      "${aws_s3_bucket.result_bucket.arn}"
+    ]
   }
 }
+
+
+
+
+
+
+
 
 # Generate policy document for scrape lambda
 data "aws_iam_policy_document" "scrape_policy" {
@@ -85,7 +106,7 @@ data "aws_iam_policy_document" "scrape_policy" {
 module "lambda_cdx" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-cdx"
-  code_bucket     = "crunchbase-dev-mvos-source"
+  # code_bucket     = "crunchbase-dev-mvos-source"
 
   policy = {
     json = data.aws_iam_policy_document.cdx_policy.json
@@ -106,35 +127,35 @@ module "lambda_cdx" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "s3_metrics_file" {
-  role       = module.lambda_cdx.name
-  policy_arn = aws_iam_policy.s3_cdx_metrics.arn
-}
+# resource "aws_iam_role_policy_attachment" "s3_metrics_file" {
+#   role       = "module.lambda_cdx.name"
+#   policy_arn = "${aws_iam_policy.s3_cdx_metrics.arn}"
+# }
 
-data "aws_iam_policy_document" "s3_cdx_metrics_policy_doc" {
-  statement {
-    sid = "1"
+# data "aws_iam_policy_document" "s3_cdx_metrics_policy_doc" {
+#   statement {
+#     sid = "1"
 
-    actions = [
-      "s3:GetObject",
-      "s3:ListBucket",
-      "s3:PutObject"
-    ]
+#     actions = [
+#       "s3:GetObject",
+#       "s3:ListBucket",
+#       "s3:PutObject"
+#     ]
 
-    resources = [
-      "${var.bucket_name}/*",
-      "${var.bucket_name}"
-    ]
-  }
-}
+#     resources = [
+#       "${aws_s3_bucket.result_bucket.arn}/*",
+#       "${aws_s3_bucket.result_bucket.arn}"
+#     ]
+#   }
+# }
 
-resource "aws_iam_policy" "s3_cdx_metrics" {
-  name        = "s3_cdx_metrics_policy"
-  path        = "/"
-  description = "The policy for the cdx metrics s3 file."
+# resource "aws_iam_policy" "s3_cdx_metrics" {
+#   name        = "s3_cdx_metrics_policy"
+#   path        = "/"
+#   description = "The policy for the cdx metrics s3 file."
 
-  policy = data.aws_iam_policy_document.s3_cdx_metrics_policy_doc.json
-}
+#   policy = data.aws_iam_policy_document.s3_cdx_metrics_policy_doc.json
+# }
 
 // data "aws_s3_bucket_object" "lambda_code" {
 //   bucket = var.bucket_name
@@ -144,7 +165,7 @@ resource "aws_iam_policy" "s3_cdx_metrics" {
 module "lambda_scrape" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-scrape"
-  code_bucket     = "crunchbase-dev-mvos-source"
+  # code_bucket     = "crunchbase-dev-mvos-source"
 
   policy = {
     json = data.aws_iam_policy_document.scrape_policy.json
@@ -155,6 +176,7 @@ module "lambda_scrape" {
     sqs_failures_arn           = module.scrape_failures.sqs_arn,
     scraper_logging_level      = var.scraper_logging_level
   }
+}
 
 #################################
 ###    SQS QUEUES    ###

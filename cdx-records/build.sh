@@ -23,5 +23,5 @@ openssl dgst -sha256 -binary lambda-scrape.zip | openssl enc -base64 > lambda-sc
 echo "done digesting"
 
 # Upload to s3
-aws s3 cp lambda-cdx.zip s3://crunchbase-dev-mvos-source/cdx-records/lambda-cdx.zip --profile 'crunch'
-aws s3 cp lambda-scrape.zip s3://crunchbase-dev-mvos-source/cdx-records/lambda-scrape.zip --profile 'crunch'
+aws s3 cp lambda-cdx.zip s3://iascraping/cdx-records/lambda-cdx.zip --profile 'crunch'
+aws s3 cp lambda-scrape.zip s3://iascraping/cdx-records/lambda-scrape.zip --profile 'crunch'
