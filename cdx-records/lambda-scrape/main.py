@@ -75,6 +75,12 @@ async def fetch(record, session):
     file_name = data['file_name']
     bucket_name = data['bucket_name']
 
+    # is there a sub_folder in the environment variables
+    # if so, add it to the bucket
+    sub_folder = os.environ.get("s3_bucket_folder", "")
+    if sub_folder != "":
+        sub_folder += "/"
+
     # failure queue
     failure_queue = failure_sqs_queue
 
@@ -88,7 +94,7 @@ async def fetch(record, session):
                 # resp.content is a byte array, convert to string
                 raw_contents = r.decode("utf-8", "ignore")
                 # write raw contents to bucket
-                raw_file_name = Path(file_name).stem + '__raw.html'
+                raw_file_name = sub_folder + Path(file_name).stem + '__raw.html'
                 s3.Object(bucket_name, raw_file_name).put(Body=raw_contents)
 
                 # strip style, script, svg
@@ -105,7 +111,7 @@ async def fetch(record, session):
                     text = clean_text(strings)
 
                     if text != '':
-                        s3.Object(bucket_name, file_name).put(Body=text)
+                        s3.Object(bucket_name, sub_folder + file_name).put(Body=text)
 
                 else:
                     logger.info(f'scraper lambda could not find any text: "{url}"')

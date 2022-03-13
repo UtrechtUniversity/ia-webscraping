@@ -128,6 +128,13 @@ lambda_name = "[YOUR_LAMBDA_NAME]" # must match the prefix of the lambda-zip fil
 # ------- Optional: when not specified the default applies, 
 # uncomment if you would like to use these parameters -----------
 
+# use a subfolder in the result bucket
+# result_bucket_folder = "[SUBFOLDER_NAME]" # default=""
+
+# Internet Archive: search in years from-to
+# ia_payload_year_from = "[START_YEAR]" # default="2018"
+# ia_payload_year_to = "[END_YEAR]" # default="2019"
+
 # cdx_logging_level = [CDX_DEBUG_LEVEL; DEFAULT=error]
 
 # scraper_logging_level = [SCRAPER_DEBUG_LEVEL; DEFAULT=error]
@@ -203,6 +210,8 @@ Arguments:
   -f  path to the file containing urls 
   -q  SQS ID: human readable name of sqs cdx queue (check the terraform output)
 
+Example:
+$ python fill_sqs_queue.py -f example.csv -q lambda-cdx-queue
 ```
 
 ### Test Function

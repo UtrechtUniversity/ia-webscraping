@@ -122,7 +122,9 @@ module "lambda_cdx" {
     sqs_message_delay_increase = var.sqs_message_delay_increase,
     cdx_lambda_n_iterations    = var.cdx_lambda_n_iterations,
     cdx_logging_level          = var.cdx_logging_level,
-    cdx_run_id                 = var.cdx_run_id
+    cdx_run_id                 = var.cdx_run_id,
+    payload_from_year          = var.ia_payload_year_from,
+    payload_to_year            = var.ia_payload_year_to,
     target_bucket_id           = aws_s3_bucket.result_bucket.id
   }
 }
@@ -174,7 +176,8 @@ module "lambda_scrape" {
   env_vars = {
     sqs_failures_id            = module.scrape_failures.sqs_id,
     sqs_failures_arn           = module.scrape_failures.sqs_arn,
-    scraper_logging_level      = var.scraper_logging_level
+    scraper_logging_level      = var.scraper_logging_level,
+    s3_bucket_folder           = var.result_bucket_folder
   }
 }
 

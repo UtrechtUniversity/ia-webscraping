@@ -14,6 +14,12 @@ variable "result_bucket" {
   default = "my_result_bucket"
 }
 
+variable "result_bucket_folder" {
+  description = "name of the folder in which scraping results will be stored, this works with the result_bucket variable"
+  type        = string
+  default = ""
+}
+
 variable "code_bucket" {
   description = "name of the s3 bucket where lambda zip and tfstate are stored"
   type        = string
@@ -68,5 +74,17 @@ variable "cdx_run_id" {
   description = "the ID of the crunchbase scrape run; this will be added as identifier to the cdx metrics logged in cloudwatch"
   type        = string
   default     = "1"
+}
+
+variable "ia_payload_year_from" {
+  description = "starting year parameter form Internet Archive request payload"
+  type        = string
+  default     = "2018"
+}
+
+variable "ia_payload_year_to" {
+  description = "end year parameter form Internet Archive request payload"
+  type        = string
+  default     = "2019"
 }
 
