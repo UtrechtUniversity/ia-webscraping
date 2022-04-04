@@ -1,4 +1,4 @@
-data "aws_s3_bucket_object" "lambda_code" {
+data "aws_s3_object" "lambda_code" {
   bucket = var.code_bucket
   key    = "cdx-records/${var.lambda_function}.zip"
 }
@@ -41,8 +41,8 @@ resource "aws_lambda_function" "lambda" {
   description   = "aws lambda function"
   role          = aws_iam_role.iam_role_lambda.arn
 
-  s3_bucket = data.aws_s3_bucket_object.lambda_code.bucket
-  s3_key    = data.aws_s3_bucket_object.lambda_code.key
+  s3_bucket = data.aws_s3_object.lambda_code.bucket
+  s3_key    = data.aws_s3_object.lambda_code.key
 
   handler = "main.handler"
 

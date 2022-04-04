@@ -1,12 +1,16 @@
 # Create bucket
 resource "aws_s3_bucket" "result_bucket" {
   bucket = var.result_bucket # bucket name
-  acl    = "private"
 
   tags = {
     Name        = "scraping-result-bucket"
     Environment = "Dev"
   }
+}
+
+resource "aws_s3_bucket_acl" "result_bucket" {
+    bucket = var.result_bucket
+    acl    = "private"
 }
 
 ################################

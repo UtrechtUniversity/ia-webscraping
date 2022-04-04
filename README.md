@@ -103,7 +103,7 @@ The 'build.sh' script will for each of the lambda functions:
 - upload the zip file to the s3 bucket
 
 First update the build script
-- lines 26 and 27: substitute `crunchbase-dev-mvos-source` for your own AWS bucket name (see [Prerequisites](#prerequisites)). The name of the zip files containing the lambda code matters! In 'build.sh' 2 zip files, 'lambda-cdx.zip' and 'lambda-scrape.zip', are created. You need the prefix 'lambda' in the [Update Terraform](#update_terraform) step as the [YOUR_LAMBDA_NAME].
+- lines 26 and 27: substitute `iascraping` for your own AWS bucket name (see [Prerequisites](#prerequisites)). The name of the zip files containing the lambda code matters! In 'build.sh' 2 zip files, 'lambda-cdx.zip' and 'lambda-scrape.zip', are created. You need the prefix 'lambda' in the [Update Terraform](#update_terraform) step as the [YOUR_LAMBDA_NAME].
 
 Then run the build script
 ```
