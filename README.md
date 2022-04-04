@@ -123,6 +123,9 @@ code_bucket = "[CODE_BUCKET_NAME]" # must be a string, subsitute the [CODE_BUCKE
 
 result_bucket = "[RESULT_BUCKET_NAME]" # can't be the same as [CODE_BUCKET_NAME]
 
+result_bucket_folder = "[Subfolder_in_RESULT_BUCKET_NAME]" #name a subfolder
+
+
 lambda_name = "[YOUR_LAMBDA_NAME]" # must match the prefix of the lambda-zip files 
 
 # ------- Optional: when not specified the default applies, 
