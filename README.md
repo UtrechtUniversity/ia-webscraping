@@ -103,7 +103,8 @@ The 'build.sh' script will for each of the lambda functions:
 - upload the zip file to the s3 bucket
 
 First update the build script
-- lines 26 and 27: substitute `iascraping` for your own AWS bucket name (see [Prerequisites](#prerequisites)). The name of the zip files containing the lambda code matters! In 'build.sh' 2 zip files, 'lambda-cdx.zip' and 'lambda-scrape.zip', are created. You need the prefix 'lambda' in the [Update Terraform](#update_terraform) step as the [YOUR_LAMBDA_NAME].
+- lines 20 and 21: substitute `iascraping` for your own AWS bucket name (see [Prerequisites](#prerequisites)). The name of the zip files containing the lambda code matters. Lambda references the code on S3 when it sets up the function.
+- lines 26 and 27: substitute `iascraping` for your own AWS bucket name. Substitute the prefix `lambda` for [YOUR_LAMBDA_NAME] which is listed in the [variables file](#update_terraform).
 
 Then run the build script
 ```
