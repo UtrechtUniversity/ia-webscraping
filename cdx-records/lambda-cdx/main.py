@@ -37,6 +37,7 @@ EXTENSIONS = [
     "woff2",
     ".ico",
     ".ttf",
+    ".pdf",
     "robots.txt",
     "/wp-json",
     "/feed$",
@@ -88,9 +89,15 @@ cdx_sqs_queue = sqs.Queue(
 def fetch_queue_limit_reached():
     # Total number of messages in fetch queue
     # = visible message + delayed messages
+    local_fetch_sqs_queue = sqs.Queue(
+        os.environ.get(
+            "sqs_fetch_id",
+            None,
+        )
+    )
     return (
-        int(fetch_sqs_queue.attributes.get("ApproximateNumberOfMessages"))
-        + int(fetch_sqs_queue.attributes.get("ApproximateNumberOfMessagesDelayed"))
+        int(local_fetch_sqs_queue.attributes.get("ApproximateNumberOfMessages"))
+        + int(local_fetch_sqs_queue.attributes.get("ApproximateNumberOfMessagesDelayed"))
         > SQS_FETCH_LIMIT
     )
 

@@ -74,6 +74,7 @@ async def fetch(record, session):
     url = data['url']
     file_name = data['file_name']
     bucket_name = data['bucket_name']
+    logger.info(f'fetch url "{url}"')
 
     # is there a sub_folder in the environment variables
     # if so, add it to the bucket

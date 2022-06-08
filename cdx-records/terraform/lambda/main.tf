@@ -50,8 +50,8 @@ resource "aws_lambda_function" "lambda" {
   source_code_hash = chomp(file("../${var.lambda_function}.zip.sha256"))
 
   runtime     = "python3.8"
-  timeout     = 120
-  memory_size = "128"
+  timeout     = 180
+  memory_size = "256"
 
   environment {
     variables = var.env_vars
