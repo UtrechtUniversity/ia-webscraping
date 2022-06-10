@@ -347,6 +347,14 @@ def handler(event, context):
                         "n_filtered_urls": 0,
                     }
                 )
+
+                processed_messages.append(
+                    {
+                    "Id": result["sqs_message_id"],
+                    "ReceiptHandle": result["sqs_receipt_handle"],
+                    }
+                )
+
                 continue
             else:
                 # Send filtered urls to fetch SQS queue
