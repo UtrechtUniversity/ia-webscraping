@@ -318,7 +318,7 @@ def handler(event, context):
                 info_message,
                 SQS_FETCH_LIMIT,
             )
-            return
+            break
 
         # get messages from CDX Queue
         messages = get_cdx_sqs_messages()
@@ -427,7 +427,9 @@ class metrics(object):
                 current_out_writer.writeheader()
             for line in self.data:
                 current_out_writer.writerow(line)
+            current_out_writer.writerow(["-------------------","","",""])    
         self.data = []
+
 
 
 def main():
