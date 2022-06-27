@@ -102,9 +102,9 @@ The 'build.sh' script will for each of the lambda functions:
 - calculate a hash of this zipfile and write this to 'example_lambda.zip.sha256'
 - upload the zip file to the s3 bucket
 
-First update the build script
-- lines 20 and 21: substitute `iascraping` for your own AWS bucket name (see [Prerequisites](#prerequisites)). The name of the zip files containing the lambda code matters. Lambda references the code on S3 when it sets up the function.
-- lines 26 and 27: substitute `iascraping` for your own AWS bucket name. Substitute the prefix `lambda` for [YOUR_LAMBDA_NAME] which is listed in the [variables file](#update_terraform).
+First update the variable values in the build script:
+- `CODE_BUCKET`: replace the default value with your own AWS bucket name (see [Prerequisites](#prerequisites)). The name of the zip files containing the lambda code matters. Lambda references the code on S3 when it sets up the function.
+- `LAMBDA_NAME`: replace the default value with [YOUR_LAMBDA_NAME] which is listed in the [variables file](#update_terraform).
 
 Then run the build script
 ```
