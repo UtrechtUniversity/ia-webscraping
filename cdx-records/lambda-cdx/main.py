@@ -86,6 +86,18 @@ cdx_sqs_queue = sqs.Queue(
     )
 )
 
+def get_fetch_queue_limit_size():
+    local_fetch_sqs_queue = sqs.Queue(
+        os.environ.get(
+            "sqs_fetch_id",
+            None,
+        )
+    )
+    return ({
+        "messages": int(local_fetch_sqs_queue.attributes.get("ApproximateNumberOfMessages")),
+        "delayed": int(local_fetch_sqs_queue.attributes.get("ApproximateNumberOfMessagesDelayed"))
+    })
+
 def fetch_queue_limit_reached():
     # Total number of messages in fetch queue
     # = visible message + delayed messages
@@ -100,6 +112,7 @@ def fetch_queue_limit_reached():
         + int(local_fetch_sqs_queue.attributes.get("ApproximateNumberOfMessagesDelayed"))
         > SQS_FETCH_LIMIT
     )
+
 
 
 def get_cdx_sqs_messages():
@@ -308,11 +321,14 @@ def handler(event, context):
 
     for i in range(CDX_LAMBDA_N_ITERATIONS):
         logger.info("CDX Lambda run '%d'", i + 1)
+        processed_messages = []
         # Check number of messages in Fetch queue
         if fetch_queue_limit_reached():
+            msgs = get_fetch_queue_limit_size()
             info_message = (
                 "Number of messages in fetch sqs queue"
                 + " higher than limit of '%d'; early return"
+                + f" ({msgs['messages']}; {msgs['delayed']})"
             )
             logger.info(
                 info_message,
@@ -330,7 +346,7 @@ def handler(event, context):
         task_results = asyncio.run(get_urls_async(messages))
 
         # Filter urls, send filtered urls to sqs
-        processed_messages = []
+        # processed_messages = []
         # The length of time, in seconds,
         # for which a specific message is delayed
         # before visible in the SQS queue
@@ -339,23 +355,7 @@ def handler(event, context):
 
             if result["urls"] is None:
                 handle_domain_no_records(result["domain"], result["error"])
-                cdx_metrics.log(
-                    {
-                        "run": CDX_RUN_ID,
-                        "domain": result["domain"],
-                        "n_urls": 0,
-                        "n_filtered_urls": 0,
-                    }
-                )
-
-                processed_messages.append(
-                    {
-                    "Id": result["sqs_message_id"],
-                    "ReceiptHandle": result["sqs_receipt_handle"],
-                    }
-                )
-
-                continue
+                filteredUrls = []
             else:
                 # Send filtered urls to fetch SQS queue
                 filteredUrls = filter_urls(result["domain"], result["urls"])
@@ -379,11 +379,11 @@ def handler(event, context):
                 }
             )
 
-        # Delete processed SQS messages CDX queue in batches of 10
-        for proc_messages_batch in chunks(processed_messages, 10):
-            cdx_sqs_queue.delete_messages(Entries=proc_messages_batch)
+    # Delete processed SQS messages CDX queue in batches of 10
+    for proc_messages_batch in chunks(processed_messages, 10):
+        cdx_sqs_queue.delete_messages(Entries=proc_messages_batch)
 
-        total_proccessed_messages += len(processed_messages)
+    total_proccessed_messages += len(processed_messages)
 
     logger.info(
         "Number of CDX SQS messages processed: '%d'; Delete messages from CDX SQS",
@@ -427,7 +427,12 @@ class metrics(object):
                 current_out_writer.writeheader()
             for line in self.data:
                 current_out_writer.writerow(line)
-            current_out_writer.writerow(["-------------------","","",""])    
+            current_out_writer.writerow(                {
+                    "run": "end",
+                    "domain": "-",
+                    "n_urls":  "-",
+                    "n_filtered_urls": "-",
+                })
         self.data = []
 
 
