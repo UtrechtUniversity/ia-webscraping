@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ## Lambda cdx build script ""
-
-LAMBDA_NAME=lambda-vos22
+CODE_BUCKET="my-bucket"
+LAMBDA_NAME="my-lambda"
 AWS_PROFILE="crunch"
 
 # install requirements
@@ -28,5 +28,5 @@ openssl dgst -sha256 -binary ./zips/${LAMBDA_NAME}-scrape.zip | openssl enc -bas
 echo "done digesting"
 
 # Upload to s3
-aws s3 cp ./zips/${LAMBDA_NAME}-cdx.zip s3://crunchbase-dev-mvos-source/cdx-records/${LAMBDA_NAME}-cdx.zip --profile ${AWS_PROFILE}
-aws s3 cp ./zips/${LAMBDA_NAME}-scrape.zip s3://crunchbase-dev-mvos-source/cdx-records/${LAMBDA_NAME}-scrape.zip --profile ${AWS_PROFILE}
+aws s3 cp ./zips/${LAMBDA_NAME}-cdx.zip s3://${CODE_BUCKET}/cdx-records/${LAMBDA_NAME}-cdx.zip --profile ${AWS_PROFILE}
+aws s3 cp ./zips/${LAMBDA_NAME}-scrape.zip s3://${CODE_BUCKET}/cdx-records/${LAMBDA_NAME}-scrape.zip --profile ${AWS_PROFILE}
