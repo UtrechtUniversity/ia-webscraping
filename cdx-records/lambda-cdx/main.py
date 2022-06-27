@@ -356,6 +356,7 @@ def handler(event, context):
             if result["urls"] is None:
                 handle_domain_no_records(result["domain"], result["error"])
                 filteredUrls = []
+                result["urls"] = []
             else:
                 # Send filtered urls to fetch SQS queue
                 filteredUrls = filter_urls(result["domain"], result["urls"])
