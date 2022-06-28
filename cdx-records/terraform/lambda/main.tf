@@ -47,7 +47,7 @@ resource "aws_lambda_function" "lambda" {
   handler = "main.handler"
 
   # Check hash code for code changes
-  source_code_hash = chomp(file("../${var.lambda_function}.zip.sha256"))
+  source_code_hash = chomp(file("../zips/${var.lambda_function}.zip.sha256"))
 
   runtime     = "python3.8"
   timeout     = 180
