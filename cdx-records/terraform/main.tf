@@ -110,7 +110,7 @@ data "aws_iam_policy_document" "scrape_policy" {
 module "lambda_cdx" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-cdx"
-  # code_bucket     = "crunchbase-dev-mvos-source"
+  code_bucket     = var.code_bucket
 
   policy = {
     json = data.aws_iam_policy_document.cdx_policy.json
@@ -143,25 +143,9 @@ module "lambda_cdx" {
 #     sid = "1"
 
 #     actions = [
-#       "s3:GetObject",
-#       "s3:ListBucket",
-#       "s3:PutObject"
-#     ]
-
-#     resources = [
-#       "${aws_s3_bucket.result_bucket.arn}/*",
-#       "${aws_s3_bucket.result_bucket.arn}"
-#     ]
+#       "s3:GetObject",iascraping
 #   }
-# }
-
-# resource "aws_iam_policy" "s3_cdx_metrics" {
-#   name        = "s3_cdx_metrics_policy"
-#   path        = "/"
-#   description = "The policy for the cdx metrics s3 file."
-
-#   policy = data.aws_iam_policy_document.s3_cdx_metrics_policy_doc.json
-# }
+# }iascraping
 
 // data "aws_s3_bucket_object" "lambda_code" {
 //   bucket = var.bucket_name
@@ -171,7 +155,7 @@ module "lambda_cdx" {
 module "lambda_scrape" {
   source          = "./lambda"
   lambda_function = "${var.lambda_name}-scrape"
-  # code_bucket     = "crunchbase-dev-mvos-source"
+  code_bucket     = var.code_bucket
 
   policy = {
     json = data.aws_iam_policy_document.scrape_policy.json
@@ -197,7 +181,7 @@ module "sqs_cdx" {
 module "sqs_fetch" {
   source                     = "./sqs"
   sqs_name                   = "${var.lambda_name}-fetch-queue"
-  visibility_timeout_seconds = 120
+  visibility_timeout_seconds = 180
   redrive_policy = jsonencode({
     deadLetterTargetArn = module.scrape_letters.sqs_arn
     maxReceiveCount     = 1000

@@ -1,6 +1,9 @@
 #!/bin/bash
 
 ## Lambda cdx build script ""
+CODE_BUCKET="my-bucket"
+LAMBDA_NAME="my-lambda"
+AWS_PROFILE="crunch"
 
 # install requirements
 pip3 install --upgrade --target ./lambda-cdx/ -r ./lambda-cdx/requirements.txt
@@ -8,20 +11,22 @@ pip3 install --upgrade --target ./lambda-scrape/ -r ./lambda-scrape/requirements
 
 echo "done installing packages"
 
+mkdir -p zips
+
 # Create zip file
-cd lambda-cdx; zip -r ../lambda-cdx.zip *
+cd lambda-cdx; zip -r ../zips/${LAMBDA_NAME}-cdx.zip *
 cd ..
-cd lambda-scrape; zip -r ../lambda-scrape.zip *
+cd lambda-scrape; zip -r ../zips/${LAMBDA_NAME}-scrape.zip *
 cd ..
 
 echo "done zipping"
 
 # Generate hash of zip file
-openssl dgst -sha256 -binary lambda-cdx.zip | openssl enc -base64 > lambda-cdx.zip.sha256
-openssl dgst -sha256 -binary lambda-scrape.zip | openssl enc -base64 > lambda-scrape.zip.sha256
+openssl dgst -sha256 -binary ./zips/${LAMBDA_NAME}-cdx.zip | openssl enc -base64 > ./zips/${LAMBDA_NAME}-cdx.zip.sha256
+openssl dgst -sha256 -binary ./zips/${LAMBDA_NAME}-scrape.zip | openssl enc -base64 > ./zips/${LAMBDA_NAME}-scrape.zip.sha256
 
 echo "done digesting"
 
 # Upload to s3
-aws s3 cp lambda-cdx.zip s3://iascraping/cdx-records/lambda-cdx.zip --profile 'crunch'
-aws s3 cp lambda-scrape.zip s3://iascraping/cdx-records/lambda-scrape.zip --profile 'crunch'
+aws s3 cp ./zips/${LAMBDA_NAME}-cdx.zip s3://${CODE_BUCKET}/cdx-records/${LAMBDA_NAME}-cdx.zip --profile ${AWS_PROFILE}
+aws s3 cp ./zips/${LAMBDA_NAME}-scrape.zip s3://${CODE_BUCKET}/cdx-records/${LAMBDA_NAME}-scrape.zip --profile ${AWS_PROFILE}
