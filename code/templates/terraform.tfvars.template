@@ -1,0 +1,50 @@
+# name of the s3 bucket your code will be copied to
+code_bucket = "[CODE_BUCKET]"
+
+# name of the s3 bucket your result will be written to (can't be same as code_bucket)
+result_bucket = "[RESULT_BUCKET]"
+result_bucket_arn = "arn:aws:s3:::[RESULT_BUCKET]"
+
+kinesis_deployment_name = "crunch_test_deployment"
+kinesis_glue_catalog_database_name = "crunchbase-test"
+kinesis_glue_catalog_table_name = "crunchbase_scrape_results"
+kinesis_iam_role_lambda_scrape_name = "crunchbase-scrape"
+
+
+# prefix of your lambda functions zip-file
+lambda_name = "[LAMBDA_NAME]"
+
+# use a subfolder in the result bucket (default="results/")
+result_bucket_folder = "scrape-results/"
+
+# valid values: txt, links, html. default: "txt,links"
+formats_to_save = "[FORMATS_TO_SAVE]"
+
+# author of messages in SQS queue
+sqs_message_author = "[LAMBDA_NAME]"
+
+# Internet Archive: search in years from-to (default="2018", "2022")
+ia_payload_year_from = "[START_YEAR]"
+ia_payload_year_to = "[END_YEAR]"
+
+match_exact_url = "[MATCH_EXACT_URL]"
+
+url_limit_per_domain = "[URL_LIMIT_PER_DOMAIN]"
+
+custom_log_group = "[CUSTOM_LOG_GROUP]"
+custom_log_stream_cdx = "[CUSTOM_LOG_STREAM_CDX]"
+custom_log_stream_scrape = "[CUSTOM_LOG_STREAM_SCRAPE]"
+
+# ------------- Optional parameters -------------
+# Uncomment if you would like to use these parameters.
+# When nothing is specified, defaults apply.
+
+# cdx_logging_level = [CDX_DEBUG_LEVEL; DEFAULT=error]
+
+# scraper_logging_level = [SCRAPER_DEBUG_LEVEL; DEFAULT=error]
+
+# sqs_cdx_max_messages = [MAX_CDX_MESSAGES_RECEIVED_PER_ITERATION; DEFAULT=10]
+
+# cdx_lambda_n_iterations = [NUMBER_ITERATIONS_CDX_FUNCTION=2]
+
+# cdx_run_id = [CDX_RUN_METRICS_IDENTIFIER; DEFAULT=1]

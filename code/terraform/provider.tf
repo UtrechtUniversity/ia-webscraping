@@ -1,0 +1,10 @@
+provider "aws" {
+  region  = "eu-central-1"
+  profile = "crunch"
+  default_tags {
+    tags = {
+      Owner   = "m.d.schermer@uu.nl"
+      Project = "crunchbase"
+    }
+  }
+}

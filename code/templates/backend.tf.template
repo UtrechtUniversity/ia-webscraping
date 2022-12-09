@@ -1,0 +1,9 @@
+terraform {
+  backend "s3" {
+    encrypt = "true"
+    bucket  = "[CODE_BUCKET]"
+    region  = "eu-central-1"
+    profile = "[AWS_PROFILE]"
+    key = "terraform/state/[LAMBDA_NAME]/terraform.tfstate"
+  }
+}
