@@ -21,6 +21,9 @@ terraform.rc
 code/lambda-cdx/*
 code/lambda-scrape/*
 
+# vars from previous build.sh run
+code/.vars
+
 # ignore in situ created metrics tsv's
 code/scripts/*.tsv
 
