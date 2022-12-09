@@ -18,14 +18,18 @@ terraform.rc
 *.tfstate.*
 
 # Ignore all installed requirements from lambda functions
-cdx-records/lambda-cdx/*
-cdx-records/lambda-scrape/*
+code/lambda-cdx/*
+code/lambda-scrape/*
+
+# ignore in situ created metrics tsv's
+code/scripts/*.tsv
+
+# ignore exported Terraform plan
+code/terraform/plan
 
 # but do include these scripts
 !**/main.py
 !**/requirements.txt
-!**/six.py
-!**/typing_extensions.py
 
 
 # Byte-compiled / optimized / DLL files
@@ -95,3 +99,4 @@ venv.bak/
 
 # Pyre type checker
 .pyre/
+
