@@ -3,14 +3,15 @@
 This repository provides code to set up an AWS workflow for collecting and analyzing webpages from the Internet Archive.
 It was developed for the Crunchbase project to assess the sustainability of European startup-companies by analyzing their websites.
 
-This software is designed for users with prior knowledge of Python, AWS and infrastructure.
+The [workflow](#architecture) is set up to scrape large numbers (millions) of Web pages. With large numbers of http requests from a single location, 
+the Internet Archive's response becomes slow and less reliable. We use serverless computing to distribute the process as much as possible.
+In addition, we use queuing services to manage the logistics and a data streaming service to process the large amounts of individual files.
+
+Please note that this software is designed for users with prior knowledge of Python, AWS and infrastructure.
+
 
 ## Table of contents
 
-- [About the project](#about-the-project)
-  - [Built with](#built-with)
-  - [License](#license)
-  - [Architecture](#architecture)
 - [Getting started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -21,59 +22,10 @@ This software is designed for users with prior knowledge of Python, AWS and infr
 - [Cleaning up](#cleaning-up)
   - [Destroying the infrastructure](#destroying-the-infrastructure)
   - [Deleting buckets](#deleting-buckets)
-
-
-## About the Project
-
-**Date**: January 2021 - December 2022
-
-**Researcher**:
-
-- Jip Leendertse (j.leendertse@uu.nl)
-
-**Research Software Engineer**:
-
-- Casper Kaandorp (c.s.kaandorp@uu.nl)
-- Martine de Vos (m.g.devos@uu.nl)
-- Robert Jan Bood (robert-jan.bood@surf.nl)
-- Maarten Schermer (m.d.schermer@uu.nl)
-
-This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/)
-
-### Built with
-
-- [Terraform](https://www.terraform.io/)
-- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
-- [asyncio](https://docs.aiohttp.org/en/stable/glossary.html#term-asyncio)
-
-### License
-
-The code in this project is released under [MIT](LICENSE).
-
-### Architecture
-The ia-webpository utilizes the following AWS services:
-- **Simple Queueing System**: manage distribution of tasks among Lambda functions and give insight in results
-    - queue with initial urls
-    - queue with scraping tasks
-- **AWS Lambda**: run code without the need for provisioning or managing servers
-    - lambda to retrieve cdx records for initial urls, filter these and send tasks to scraping queue
-    - lambda to retrieve webpages for cdx records and send these to s3 bucket
-- **S3**: for storage of the HTML pages
-- **CloudWatch**: monitor and manage AWS services
-   - CloudWatch to monitor the metrics of the SQS queue and Lambda functions
-   - CloudWatch to trigger the Lambda function on a timely basis, the interval can be changed to throttle the process
-- **Kinesis Data Firehose**: delivery streams
-   - data from the scraping lambda is pushed to S3 using the Kinesis Data Firehose delviery system.
-   - stores data in Apache Parquet files.
-
-Configuration of the necessary AWS infrastructure and deployment of the Lambda functions is done using the
-“infrastructure as code” tool Terraform.
-
-Deploying this solution will result in the following scrape pipeline in the AWS Cloud.
-
-![Alt text](docs/architecture_overview.png?raw=true "Architecture Overview")
-
-(n.b. schema lacks Kinesis Data Firehose component)
+- [About the project](#about-the-project)
+  - [Built with](#built-with)
+  - [License](#license)
+  - [Architecture](#architecture)
 
 ## Getting started
 
@@ -453,3 +405,56 @@ In that case it is advisable to use the AWS client. Example command:
 $ aws s3 rb s3://my_result_bucket --force
 ```
 This will delete all files from the bucket, and subsequently the bucket itself.
+
+## About the Project
+
+**Date**: January 2021 - December 2022
+
+**Researcher**:
+
+- Jip Leendertse (j.leendertse@uu.nl)
+
+**Research Software Engineer**:
+
+- Casper Kaandorp (c.s.kaandorp@uu.nl)
+- Martine de Vos (m.g.devos@uu.nl)
+- Robert Jan Bood (robert-jan.bood@surf.nl)
+- Maarten Schermer (m.d.schermer@uu.nl)
+
+This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/)
+
+### Built with
+
+- [Terraform](https://www.terraform.io/)
+- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+- [asyncio](https://docs.aiohttp.org/en/stable/glossary.html#term-asyncio)
+
+### License
+
+The code in this project is released under [MIT](LICENSE).
+
+### Architecture
+The ia-webpository utilizes the following AWS services:
+- **Simple Queueing System**: manage distribution of tasks among Lambda functions and give insight in results
+    - queue with initial urls
+    - queue with scraping tasks
+- **AWS Lambda**: run code without the need for provisioning or managing servers
+    - lambda to retrieve cdx records for initial urls, filter these and send tasks to scraping queue
+    - lambda to retrieve webpages for cdx records and send these to s3 bucket
+- **S3**: for storage of the HTML pages
+- **CloudWatch**: monitor and manage AWS services
+   - CloudWatch to monitor the metrics of the SQS queue and Lambda functions
+   - CloudWatch to trigger the Lambda function on a timely basis, the interval can be changed to throttle the process
+- **Kinesis Data Firehose**: delivery streams
+   - data from the scraping lambda is pushed to S3 using the Kinesis Data Firehose delviery system.
+   - stores data in Apache Parquet files.
+
+Configuration of the necessary AWS infrastructure and deployment of the Lambda functions is done using the
+“infrastructure as code” tool Terraform.
+
+Deploying this solution will result in the following scrape pipeline in the AWS Cloud.
+
+![Alt text](docs/architecture_overview.png?raw=true "Architecture Overview")
+
+(n.b. schema lacks Kinesis Data Firehose component)
+
