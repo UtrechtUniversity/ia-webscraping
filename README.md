@@ -105,10 +105,10 @@ Note, these policies are broader than required for the deployment of Crunchbase.
 
 
 ### Installation
-Check out [this repository](https://github.com/UtrechtUniversity/ia-webscraping), and make sure you checkout the 'main' branch. Open a terminal window and navigate to the `cdx-records` directory.
+Check out [this repository](https://github.com/UtrechtUniversity/ia-webscraping), and make sure you checkout the 'main' branch. Open a terminal window and navigate to the `code` directory.
 ```bash
-# Go to CDX records folder
-$ cd cdx-records
+# Go to code folder
+$ cd code
 ```
 (The index format used by the Internet Archive is called 'cdx', hence the name)
 
@@ -195,7 +195,7 @@ These are in the file [terraform.tfvars](terraform/terraform.tfvars), below the 
 # cdx_run_id = [CDX_RUN_METRICS_IDENTIFIER; DEFAULT=1]
 ```
 
-See the [variables file](/cdx-records/terraform/variables.tf) for more information on each of these variables.
+See the [variables file](/code/terraform/variables.tf) for more information on each of these variables.
 
 Please note that [terraform.tfvars](terraform/terraform.tfvars) is automatically generated when you run the build-script,
 overwriting any manual changes you may have made. If you wish to modify any of the variables in the file, do so _after_
@@ -253,7 +253,7 @@ JavaScript-files, stylesheets etc.), the remaining links are sent to a second qu
 2. The 'scrape' function reads links from the second queue, retrieves the corresponding pages from the Internet Archive,
 and saves the contents to the result bucket. The contents are saved as Parquet datafiles.
 
-The `fill_sqs_queue.py` script adds domains to be scraped to the initial queue (script is located in 'cdx-records'):
+The `fill_sqs_queue.py` script adds domains to be scraped to the initial queue (script is located in the [code folder](code/)):
 ```bash
 # Fill sqs queue
 $ python fill_sqs_queue.py [ARGUMENTS]
@@ -340,7 +340,7 @@ Metrics per scraped URL
 + size saved txt (in bytes)
 + size saved links (in bytes)
 
-#### Browsing, querying and dwnloading log lines
+#### Browsing, querying and downloading log lines
 All log lines can be browsed through the Log Groups of the CloudWatch section of the AWS Console, and, up to a point, queried via the 
 Log Insights function. To download them locally, install and run [saw](https://github.com/TylerBrock/saw). A typical command would be:
 
