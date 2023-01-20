@@ -21,7 +21,7 @@ Please note that this software is designed for users with prior knowledge of Pyt
 - [Results](#results)
   - [Processing Parquet files](#processing-parquet-files)
 - [Cleaning up](#cleaning-up)
-  - [Destroying the infrastructure](#destroying-the-infrastructure)
+  - [Deleting the infrastructure](#deleting-the-infrastructure)
   - [Deleting buckets](#deleting-buckets)
 - [About the project](#about-the-project)
   - [Architecture](#architecture)
@@ -64,8 +64,6 @@ Check out [this repository](https://github.com/UtrechtUniversity/ia-webscraping)
 # Go to code folder
 $ cd code
 ```
-(The index format used by the Internet Archive is called 'cdx', hence the name)
-
 
 #### Configuring Lambda functions and Terraform
 The `build.sh` script in this folder will for each of the Lambda functions:
@@ -391,7 +389,7 @@ Each Parquet-file contains a number of rows, each one corresponding with one scr
 
 
 ## Cleaning up
-### Destroying the infrastructure
+### Deleting the infrastructure
 After finishing scraping, run the following [command](https://www.terraform.io/docs/commands/destroy.html), to
 clean up the AWS resources that were deployed by Terraform:
 ```bash
