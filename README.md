@@ -315,14 +315,6 @@ they were created. For instance, a pipeline started on December 7th 2022 will ge
 ```bash
 s3://my_result_bucket/2022/12/07/scrape-kinesis-firehose-9-2022-12-07-09-23-43-00efb47c-021f-475f-a119-1aecf2b15ed9.parquet
 ```
-Each Parquet-file contains a number of rows, each one corresponding with one scraped URL, with the following columns:
-+ job_tag: id.
-+ domain: domain for which the CDX-function retrieved the URL.
-+ url: full URL that was scraped.
-+ page_text: full page text
-+ page_links: list of page links
-+ timestamp: timestamp of creation of the record
-
 
 ### Processing Parquet-files
 
@@ -381,6 +373,19 @@ $ python parquet_file_join.py \
 extensions are added automatically.
 + `max-file-size`: optional parameter to set the appromximate maximum file size in MB of the resulting files (default: 25)
 + `delete-originals`: optional, default False.
+
+#### Reading Parquet files
+If you are using Python, you can read the Parquet files into a Pandas or Polars DataFrame, 
+or use the [pyarrow](https://pypi.org/project/pyarrow/) package.
+For R you can use the [arrow](https://arrow.apache.org/docs/r/reference/read_parquet.html) package.
+
+Each Parquet-file contains a number of rows, each one corresponding with one scraped URL, with the following columns:
++ job_tag: id.
++ domain: domain for which the CDX-function retrieved the URL.
++ url: full URL that was scraped.
++ page_text: full page text
++ page_links: list of page links
++ timestamp: timestamp of creation of the record
 
 
 ## Cleaning up
