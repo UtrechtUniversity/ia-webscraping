@@ -452,6 +452,8 @@ The code in this project is released under [MIT](LICENSE).
 
 Please cite this repository as 
 
+Schermer, M., Bood, R.J., Kaandorp, C., & de Vos, M.G. (2023). "Ia-webscraping: An AWS workflow for collecting webpages from the Internet Archive "  (Version 1.0.0) [Computer software]. https://doi.org/10.5281/zenodo.7554441
+
 [![DOI](https://zenodo.org/badge/329035317.svg)](https://zenodo.org/badge/latestdoi/329035317)
 
 

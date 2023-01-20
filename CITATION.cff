@@ -34,6 +34,6 @@ keywords:
 license: "MIT"
 message: "If you use this software, please cite it using these metadata."
 repository-code: "https://github.com/UtrechtUniversity/ia-webscraping/releases/tag/v1.0.0"
-title: "ia-webscraping: An AWS workflow for collecting webpages from the Internet Archive "
+title: "Ia-webscraping: An AWS workflow for collecting webpages from the Internet Archive "
 version: "1.0.0"
 date-released: "2023-01-20"
