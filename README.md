@@ -5,7 +5,7 @@ It was developed for the Crunchbase project to assess the sustainability of Euro
 
 The [workflow](#architecture) is set up to scrape large numbers (millions) of Web pages. With large numbers of http requests from a single location, 
 the Internet Archive's response becomes slow and less reliable. We use serverless computing to distribute the process as much as possible.
-In addition, we use queuing services to manage the logistics and a data streaming service to process the large amounts of individual files.
+In addition, we use queueing services to manage the logistics and a data streaming service to process the large amounts of individual files.
 
 Please note that this software is designed for users with prior knowledge of Python, AWS and infrastructure.
 
@@ -18,14 +18,16 @@ Please note that this software is designed for users with prior knowledge of Pyt
 - [Running the pipeline](#running-the-pipeline)
   - [Uploading URLs](#upload-urls-to-be-scraped)
   - [Monitoring progress](#monitor-progress)
-  - [Results](#results)
+- [Results](#results)
+  - [Processing Parquet files](#processing-parquet-files)
 - [Cleaning up](#cleaning-up)
   - [Destroying the infrastructure](#destroying-the-infrastructure)
   - [Deleting buckets](#deleting-buckets)
 - [About the project](#about-the-project)
-  - [Built with](#built-with)
-  - [License](#license)
   - [Architecture](#architecture)
+  - [Built with](#built-with)
+  - [License and citation](#license-and-citation)
+  - [Team](#team)
 
 ## Getting started
 
@@ -413,31 +415,6 @@ This will delete all files from the bucket, and subsequently the bucket itself.
 
 ## About the Project
 
-**Date**: January 2021 - December 2022
-
-**Researcher**:
-
-- Jip Leendertse (j.leendertse@uu.nl)
-
-**Research Software Engineer**:
-
-- Casper Kaandorp (c.s.kaandorp@uu.nl)
-- Martine de Vos (m.g.devos@uu.nl)
-- Robert Jan Bood (robert-jan.bood@surf.nl)
-- Maarten Schermer (m.d.schermer@uu.nl)
-
-This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/)
-
-### Built with
-
-- [Terraform](https://www.terraform.io/)
-- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
-- [asyncio](https://docs.aiohttp.org/en/stable/glossary.html#term-asyncio)
-
-### License
-
-The code in this project is released under [MIT](LICENSE).
-
 ### Architecture
 The ia-webpository utilizes the following AWS services:
 - **Simple Queueing System**: manage distribution of tasks among Lambda functions and give insight in results
@@ -462,4 +439,32 @@ Deploying this solution will result in the following scrape pipeline in the AWS 
 ![Alt text](docs/architecture_overview.png?raw=true "Architecture Overview")
 
 (n.b. schema lacks Kinesis Data Firehose component)
+
+### Built with
+
+- [Terraform](https://www.terraform.io/)
+- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+- [asyncio](https://docs.aiohttp.org/en/stable/glossary.html#term-asyncio)
+
+### License and citation
+
+The code in this project is released under [MIT](LICENSE).
+
+Please cite this repository as 
+
+
+### Team
+
+**Researcher**:
+
+- Jip Leendertse (j.leendertse@uu.nl)
+
+**Research Software Engineer**:
+
+- Casper Kaandorp (c.s.kaandorp@uu.nl)
+- Martine de Vos (m.g.devos@uu.nl)
+- Robert Jan Bood (robert-jan.bood@surf.nl)
+- Maarten Schermer (m.d.schermer@uu.nl)
+
+This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/)
 
