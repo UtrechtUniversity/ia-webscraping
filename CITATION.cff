@@ -1,0 +1,39 @@
+# YAML 1.2
+---
+authors: 
+  -
+    affiliation: "Utrecht University"
+    family-names: Schermer
+    given-names: Maarten
+    orcid: 
+  -
+    affiliation: "SURF"
+    family-names: "Bood"
+    given-names: "Robert Jan"
+    orcid: 
+  -
+    affiliation: "Utrech University"
+    family-names: Kaandorp
+    given-names: Casper
+    orcid: "https://orcid.org/0000-0001-6326-6680"
+  -
+    affiliation: "Utrecht University"
+    family-names: "de Vos"
+    given-names: "Martine G"
+    orcid: "https://orcid.org/0000-0001-5301-1713"
+  -
+
+cff-version: "1.0.3"
+doi: "10.5281/zenodo.5211335"
+keywords: 
+  - "web-scraping"
+  - "internet-archive"
+  - "aws"
+  - "python"
+  - "terraform"
+license: "MIT"
+message: "If you use this software, please cite it using these metadata."
+repository-code: "https://github.com/UtrechtUniversity/ia-webscraping/releases/tag/v1.0.0"
+title: "Ia-webscraping: An AWS workflow for collecting webpages from the Internet Archive "
+version: "1.0.0"
+date-released: "2023-01-20"

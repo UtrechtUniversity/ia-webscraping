@@ -1,79 +1,33 @@
 # ia-webscraping
 
-This repository provides code to set up an AWS workflow for collecting and analyzing webpages from the Internet Archive.
+This repository provides code to set up an AWS workflow for collecting webpages from the Internet Archive.
 It was developed for the Crunchbase project to assess the sustainability of European startup-companies by analyzing their websites.
 
-This software is designed for users with prior knowledge of Python, AWS and infrastructure.
+The [workflow](#architecture) is set up to scrape large numbers (millions) of Web pages. With large numbers of http requests from a single location, 
+the Internet Archive's response becomes slow and less reliable. We use serverless computing to distribute the process as much as possible.
+In addition, we use queueing services to manage the logistics and a data streaming service to process the large amounts of individual files.
+
+Please note that this software is designed for users with prior knowledge of Python, AWS and infrastructure.
+
 
 ## Table of contents
 
-- [About the project](#about-the-project)
-  - [Built with](#built-with)
-  - [License](#license)
-  - [Architecture](#architecture)
 - [Getting started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Running the pipeline](#running-the-pipeline)
   - [Uploading URLs](#upload-urls-to-be-scraped)
   - [Monitoring progress](#monitor-progress)
-  - [Results](#results)
+- [Results](#results)
+  - [Processing Parquet files](#processing-parquet-files)
 - [Cleaning up](#cleaning-up)
   - [Destroying the infrastructure](#destroying-the-infrastructure)
   - [Deleting buckets](#deleting-buckets)
-
-
-## About the Project
-
-**Date**: January 2021 - December 2022
-
-**Researcher**:
-
-- Jip Leendertse (j.leendertse@uu.nl)
-
-**Research Software Engineer**:
-
-- Casper Kaandorp (c.s.kaandorp@uu.nl)
-- Martine de Vos (m.g.devos@uu.nl)
-- Robert Jan Bood (robert-jan.bood@surf.nl)
-- Maarten Schermer (m.d.schermer@uu.nl)
-
-This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/)
-
-### Built with
-
-- [Terraform](https://www.terraform.io/)
-- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
-- [asyncio](https://docs.aiohttp.org/en/stable/glossary.html#term-asyncio)
-
-### License
-
-The code in this project is released under [MIT](LICENSE).
-
-### Architecture
-The ia-webpository utilizes the following AWS services:
-- **Simple Queueing System**: manage distribution of tasks among Lambda functions and give insight in results
-    - queue with initial urls
-    - queue with scraping tasks
-- **AWS Lambda**: run code without the need for provisioning or managing servers
-    - lambda to retrieve cdx records for initial urls, filter these and send tasks to scraping queue
-    - lambda to retrieve webpages for cdx records and send these to s3 bucket
-- **S3**: for storage of the HTML pages
-- **CloudWatch**: monitor and manage AWS services
-   - CloudWatch to monitor the metrics of the SQS queue and Lambda functions
-   - CloudWatch to trigger the Lambda function on a timely basis, the interval can be changed to throttle the process
-- **Kinesis Data Firehose**: delivery streams
-   - data from the scraping lambda is pushed to S3 using the Kinesis Data Firehose delviery system.
-   - stores data in Apache Parquet files.
-
-Configuration of the necessary AWS infrastructure and deployment of the Lambda functions is done using the
-“infrastructure as code” tool Terraform.
-
-Deploying this solution will result in the following scrape pipeline in the AWS Cloud.
-
-![Alt text](docs/architecture_overview.png?raw=true "Architecture Overview")
-
-(n.b. schema lacks Kinesis Data Firehose component)
+- [About the project](#about-the-project)
+  - [Architecture](#architecture)
+  - [Built with](#built-with)
+  - [License and citation](#license-and-citation)
+  - [Team](#team)
 
 ## Getting started
 
@@ -105,10 +59,10 @@ Note, these policies are broader than required for the deployment of Crunchbase.
 
 
 ### Installation
-Check out [this repository](https://github.com/UtrechtUniversity/ia-webscraping), and make sure you checkout the 'main' branch. Open a terminal window and navigate to the `cdx-records` directory.
+Check out [this repository](https://github.com/UtrechtUniversity/ia-webscraping), and make sure you checkout the 'main' branch. Open a terminal window and navigate to the `code` directory.
 ```bash
-# Go to CDX records folder
-$ cd cdx-records
+# Go to code folder
+$ cd code
 ```
 (The index format used by the Internet Archive is called 'cdx', hence the name)
 
@@ -195,7 +149,7 @@ These are in the file [terraform.tfvars](terraform/terraform.tfvars), below the 
 # cdx_run_id = [CDX_RUN_METRICS_IDENTIFIER; DEFAULT=1]
 ```
 
-See the [variables file](/cdx-records/terraform/variables.tf) for more information on each of these variables.
+See the [variables file](/code/terraform/variables.tf) for more information on each of these variables.
 
 Please note that [terraform.tfvars](terraform/terraform.tfvars) is automatically generated when you run the build-script,
 overwriting any manual changes you may have made. If you wish to modify any of the variables in the file, do so _after_
@@ -253,7 +207,7 @@ JavaScript-files, stylesheets etc.), the remaining links are sent to a second qu
 2. The 'scrape' function reads links from the second queue, retrieves the corresponding pages from the Internet Archive,
 and saves the contents to the result bucket. The contents are saved as Parquet datafiles.
 
-The `fill_sqs_queue.py` script adds domains to be scraped to the initial queue (script is located in 'cdx-records'):
+The `fill_sqs_queue.py` script adds domains to be scraped to the initial queue (script is located in the [code folder](code/)):
 ```bash
 # Fill sqs queue
 $ python fill_sqs_queue.py [ARGUMENTS]
@@ -340,7 +294,7 @@ Metrics per scraped URL
 + size saved txt (in bytes)
 + size saved links (in bytes)
 
-#### Browsing, querying and dwnloading log lines
+#### Browsing, querying and downloading log lines
 All log lines can be browsed through the Log Groups of the CloudWatch section of the AWS Console, and, up to a point, queried via the 
 Log Insights function. To download them locally, install and run [saw](https://github.com/TylerBrock/saw). A typical command would be:
 
@@ -363,14 +317,6 @@ they were created. For instance, a pipeline started on December 7th 2022 will ge
 ```bash
 s3://my_result_bucket/2022/12/07/scrape-kinesis-firehose-9-2022-12-07-09-23-43-00efb47c-021f-475f-a119-1aecf2b15ed9.parquet
 ```
-Each Parquet-file contains a number of rows, each one corresponding with one scraped URL, with the following columns:
-+ job_tag: id.
-+ domain: domain for which the CDX-function retrieved the URL.
-+ url: full URL that was scraped.
-+ page_text: full page text
-+ page_links: list of page links
-+ timestamp: timestamp of creation of the record
-
 
 ### Processing Parquet-files
 
@@ -430,6 +376,19 @@ extensions are added automatically.
 + `max-file-size`: optional parameter to set the appromximate maximum file size in MB of the resulting files (default: 25)
 + `delete-originals`: optional, default False.
 
+#### Reading Parquet files
+If you are using Python, you can read the Parquet files into a Pandas or Polars DataFrame, 
+or use the [pyarrow](https://pypi.org/project/pyarrow/) package.
+For R you can use the [arrow](https://arrow.apache.org/docs/r/reference/read_parquet.html) package.
+
+Each Parquet-file contains a number of rows, each one corresponding with one scraped URL, with the following columns:
++ job_tag: id.
++ domain: domain for which the CDX-function retrieved the URL.
++ url: full URL that was scraped.
++ page_text: full page text
++ page_links: list of page links
++ timestamp: timestamp of creation of the record
+
 
 ## Cleaning up
 ### Destroying the infrastructure
@@ -453,3 +412,63 @@ In that case it is advisable to use the AWS client. Example command:
 $ aws s3 rb s3://my_result_bucket --force
 ```
 This will delete all files from the bucket, and subsequently the bucket itself.
+
+## About the Project
+
+### Architecture
+The ia-webpository utilizes the following AWS services:
+- **Simple Queueing System**: manage distribution of tasks among Lambda functions and give insight in results
+    - queue with initial urls
+    - queue with scraping tasks
+- **AWS Lambda**: run code without the need for provisioning or managing servers
+    - lambda to retrieve cdx records for initial urls, filter these and send tasks to scraping queue
+    - lambda to retrieve webpages for cdx records and send these to s3 bucket
+- **S3**: for storage of the HTML pages
+- **CloudWatch**: monitor and manage AWS services
+   - CloudWatch to monitor the metrics of the SQS queue and Lambda functions
+   - CloudWatch to trigger the Lambda function on a timely basis, the interval can be changed to throttle the process
+- **Kinesis Data Firehose**: delivery streams
+   - data from the scraping lambda is pushed to S3 using the Kinesis Data Firehose delviery system.
+   - stores data in Apache Parquet files.
+
+Configuration of the necessary AWS infrastructure and deployment of the Lambda functions is done using the
+“infrastructure as code” tool Terraform.
+
+Deploying this solution will result in the following scrape pipeline in the AWS Cloud.
+
+![Alt text](docs/architecture_overview.png?raw=true "Architecture Overview")
+
+(n.b. schema lacks Kinesis Data Firehose component)
+
+### Built with
+
+- [Terraform](https://www.terraform.io/)
+- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
+- [asyncio](https://docs.aiohttp.org/en/stable/glossary.html#term-asyncio)
+
+### License and citation
+
+The code in this project is released under [MIT](LICENSE).
+
+Please cite this repository as 
+
+Schermer, M., Bood, R.J., Kaandorp, C., & de Vos, M.G. (2023). "Ia-webscraping: An AWS workflow for collecting webpages from the Internet Archive "  (Version 1.0.0) [Computer software]. https://doi.org/10.5281/zenodo.7554441
+
+[![DOI](https://zenodo.org/badge/329035317.svg)](https://zenodo.org/badge/latestdoi/329035317)
+
+
+### Team
+
+**Researcher**:
+
+- Jip Leendertse (j.leendertse@uu.nl)
+
+**Research Software Engineer**:
+
+- Casper Kaandorp (c.s.kaandorp@uu.nl)
+- Martine de Vos (m.g.devos@uu.nl)
+- Robert Jan Bood (robert-jan.bood@surf.nl)
+- Maarten Schermer (m.d.schermer@uu.nl)
+
+This project is part of the Public Cloud call of [SURF](https://www.surf.nl/en/)
+
