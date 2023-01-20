@@ -1,6 +1,6 @@
 # ia-webscraping
 
-This repository provides code to set up an AWS workflow for collecting and analyzing webpages from the Internet Archive.
+This repository provides code to set up an AWS workflow for collecting webpages from the Internet Archive.
 It was developed for the Crunchbase project to assess the sustainability of European startup-companies by analyzing their websites.
 
 The [workflow](#architecture) is set up to scrape large numbers (millions) of Web pages. With large numbers of http requests from a single location, 
@@ -451,6 +451,8 @@ Deploying this solution will result in the following scrape pipeline in the AWS 
 The code in this project is released under [MIT](LICENSE).
 
 Please cite this repository as 
+
+[![DOI](https://zenodo.org/badge/329035317.svg)](https://zenodo.org/badge/latestdoi/329035317)
 
 
 ### Team
