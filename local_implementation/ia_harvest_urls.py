@@ -22,7 +22,7 @@ class ValidDomain(NamedTuple):
     line: str
     tld: str
 
-class InternetArchiveUrlHarvestrer:
+class InternetArchiveUrlHarvester:
 
     request_delay = 1 # seconds
 
@@ -207,7 +207,7 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    InternetArchiveUrlHarvestrer(
+    InternetArchiveUrlHarvester(
         input_file=args.input_file,
         output_file=args.output_file,
         year_from=args.year_from,
