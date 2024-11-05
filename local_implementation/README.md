@@ -1,8 +1,8 @@
 # IA-webscraping: local implementation
 
-These script contain a local implementation of the IA-webscraping pipeline. These do not require AWS infrastructure, and as a result, do not benefit from AWS infrastructure. Everything is done sequentially in a single thread (no parallelisation), so if you have a lot of sites, a lot of patience will be required. Also, the size of your local storage might become a problem if you scrape millions of URLs.
+These scripts contain a local implementation of the IA-webscraping pipeline. These do not require AWS infrastructure, and as a reuslt, also do not benefit from AWS infrastructure. Everything is done sequentially in a single thread (no parallelisation), so if you have a lot of sites, a lot of patience will be required. Also, the size of your local storage might become a problem if you scrape millions of URLs.
 
-Be aware: this version has not been extensively tested.
+Be aware this version has not been extensively tested, and has limited error handling.
 
 ## Requirements
 
@@ -18,9 +18,9 @@ Typical usage:
 ```bash
 python ia_harvest_urls.py -i links.txt
 ```
-This will read links to be queried from `links.txt` and retrieve the URL for the newest snapshot (if any are avaiulable) form the Internet Archive for each of the links in the file, and save the IA URLs to a JSON-file.
+This will read links to be queried from `links.txt` and retrieve the URL for the newest snapshot (if any are available) form the Internet Archive for each of the links in the file, and save the IA URLs to a JSON-file.
 
-Input file should have one link per line. Empty lines and invalid URLs will be skipped.
+The input should be a plain text file, with just one URL per line (if you use CSV, there should be just once colum, as the script will read each entire row as a single link). Each URL can be a full link (`https://www.uu.nl/organisatie/nieuws-agenda`), FQDN (`www.uu.nl`), or just top level domain (`uu.nl`), all either with or without the protocol specification (`http://`, `https://`); so basically everything you can open in a browser. Empty lines and invalid URLs will be skipped (you will be notified).
 
 All options:
 ```bash
@@ -43,17 +43,18 @@ optional arguments:
                         Max number of snapshots per site to harvest (newest first).
                         Default: 1
 ```
+`--year-from` and `--year-to` set the earliest and latest snapshot to retrieve for each URL.
 
-`--get-domain` will have the script retrieve URLs for each link's domain, rather than the full URL. (So for example, `uu.nl` instead of  `https://www.uu.nl/organisatie/nieuws-agenda`).
+`--get-domain` will have the script retrieve each link's domain, rather than the full URL (so `uu.nl` instead of `https://www.uu.nl/organisatie/nieuws-agenda`).
 
-There is a 1 second delay between subsequent requests to the IA, to avoid overloading the service. If you get `connection refused`-errors, increase the wait time by changing the value of `request_wait` at the top of the `InternetArchiveUrlHarvestrer` class.
+There is a 1 second delay between subsequent requests to the IA, to avoid overloading the service. If you get `connection refused`-errors, increase the wait time by changing the value of `request_wait` at the top of the `InternetArchiveUrlHarvester` class in the script.
 
 
 #### Resuming harvesting
-While downloading, the script keeps track of progress of which links it has finished harvesting snapshots for. If you break off harvesting, and resume later, the script will skip the links it has already processed. When resuming, results are automatically appended to the output file if it is already present. The script keeps track of its progress by writing to a file called `.sites`, located in the same folder as the output file. You can delete or alter the `.sites` file as you see fit to influence the script's behaviour. 
+While downloading, the script keeps track of progress of which links it has finished harvesting snapshots for. If you break off harvesting, and resume later, the script will skip the links it has already processed. When resuming, results are automatically appended to the output file if it is already present. The script keeps track of its progress by writing to a file called `.sites`, located in the same folder as the output file. You can delete or alter the `.sites` file as you see fit to influence the script's resumption behaviour.
 
 #### URL Match Scope
-The script only retrieves **exact matches** of each URL. To change, change `url_match_scope = "exact"` on line 125 of the script to the appropriate value (see [Url Match Scope](https://github.com/internetarchive/wayback/blob/master/wayback-cdx-server/README.md#url-match-scope) in the IA API's documentation). 
+The script only retrieves **exact matches** of each URL (or its TLD when run with `--get-domain`). To change, change `url_match_scope = "exact"` on line 125 of the script to the appropriate value (see [Url Match Scope](https://github.com/internetarchive/wayback/blob/master/wayback-cdx-server/README.md#url-match-scope) in the IA API's documentation). 
 
 Be aware, setting `url_match_scope` to `prefix` will increase the number of pages to be scraped, possibly dramatically so. Also, be aware that the `--snapshot-limit` is enforced on a list of all URLs that is first being sorted by size, shortest first, and then by date.
 
